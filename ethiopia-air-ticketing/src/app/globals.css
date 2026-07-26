@@ -1,0 +1,44 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  --color-brand-900: #0B3C5D;
+  --color-brand-500: #1D9BF0;
+  --color-brand-gold: #F4B400;
+  --color-surface-light: #F7F9FB;
+  --color-brand-gold-light: #FFD166;
+  --color-surface-white: #FFFFFF;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+}
+
+/* Ensure the body uses Nunito (via the CSS variable) */
+body {
+  font-family: var(--font-nunito), sans-serif;
+}
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
