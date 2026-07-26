@@ -42,9 +42,7 @@ next-env.d.ts
 # Local booking data (contains user requests – DO NOT COMMIT)
 /data
 
-# Large video files (keep them out of the repo to avoid bloat)
-public/hero-video.mp4
-public/hero-video.webm
+
 
 # Environment variables (already covered by .env*, but double‑check)
 .env.local
