@@ -8,7 +8,6 @@ export default function Hero() {
         muted
         loop
         playsInline
-        poster="/hero-plane.png"
         className="absolute inset-0 w-full h-full object-cover z-0"
         preload="metadata"
       >
