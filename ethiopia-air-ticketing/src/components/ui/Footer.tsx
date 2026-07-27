@@ -12,7 +12,7 @@ import {
 export default function Footer() {
   return (
     <footer className="relative bg-white text-text-primary pt-16 pb-8 overflow-hidden">
-      {/* Decorative background shapes (same as WhyChooseUs) */}
+      {/* Decorative background shapes */}
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-brand-gold/10 rotate-45 pointer-events-none" />
       <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-72 h-72 bg-brand-900/5 rotate-12 pointer-events-none" />
 
@@ -39,17 +39,21 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 items-start mb-12">
           
           {/* Column 1 – Logo + Description */}
-          <div>
-            <Link href="/" className="inline-block -mt-2">
+          <div className="flex flex-col items-start">
+            <Link
+              href="/"
+              className="relative block h-20 sm:h-24 md:h-28 lg:h-32 w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] mb-2 -mt-3"
+            >
               <Image
                 src="/ticketing-logo.png"
                 alt="Ethiopia Air Ticketing"
                 width={440}
                 height={102}
-                className="h-40 w-auto"
+                priority
+                className="h-full w-full object-contain object-left"
               />
             </Link>
-            <p className="mt-1 text-text-secondary text-sm leading-relaxed">
+            <p className="text-text-secondary text-sm leading-relaxed max-w-xs sm:max-w-sm lg:max-w-none">
               Your trusted partner for flight bookings and quotations from Addis Ababa to the world.
             </p>
           </div>

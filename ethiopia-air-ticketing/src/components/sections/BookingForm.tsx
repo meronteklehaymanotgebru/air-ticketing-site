@@ -1,11 +1,10 @@
-// src/components/sections/BookingForm.tsx
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect, useRef } from "react";
-import { Send, CheckCircle, ChevronDown, Search } from "lucide-react";
+import { Send, CheckCircle, ChevronDown, Search, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -27,15 +26,15 @@ const bookingSchema = z.object({
   children: z.number().min(0),
   infants: z.number().min(0),
   travelClass: z.enum(["Economy", "Business", "First"]),
-  flexibleDates: z.boolean(),                           // removed .default(false)
+  flexibleDates: z.boolean(),
   preferredAirlines: z.string().optional(),
-  budget: z.enum(["under500", "500to1000", "above1000", "noLimit"]),   // removed .default("noLimit")
+  budget: z.enum(["under500", "500to1000", "above1000", "noLimit"]),
   specialRequests: z.string().optional(),
   name: z.string().min(1, "Required"),
   phone: z.string().refine((val) => isValidPhoneNumber(val), {
     message: "Invalid phone number",
   }),
-  contactMethod: z.enum(["WhatsApp", "Telegram"]),      // removed .default("WhatsApp")
+  contactMethod: z.enum(["WhatsApp", "Telegram"]),
 }).refine(
   (data) => {
     if (data.returnDate && data.returnDate < data.departureDate) return false;
@@ -136,17 +135,21 @@ function AirportAutocomplete({
   );
 }
 
-// ---------- Airline Dropdown ----------
-function AirlineDropdown({
+// ---------- Airline Autocomplete (NEW – type to filter) ----------
+function AirlineAutocomplete({
   value,
   onChange,
+  error,
 }: {
   value: string;
   onChange: (val: string) => void;
+  error?: string;
 }) {
+  const safeValue = value || "";
   const [airlines, setAirlines] = useState<Airline[]>([]);
+  const [filtered, setFiltered] = useState<Airline[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const selected = airlines.find((a) => a.name === value);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/airlines")
@@ -155,38 +158,55 @@ function AirlineDropdown({
       .catch(() => setAirlines([]));
   }, []);
 
+  useEffect(() => {
+    const query = safeValue.toLowerCase().trim();
+    if (query.length === 0) {
+      setFiltered(airlines.slice(0, 8)); // show first few when empty
+      return;
+    }
+    const results = airlines.filter((a) =>
+      a.name.toLowerCase().includes(query)
+    );
+    setFiltered(results.slice(0, 8));
+  }, [safeValue, airlines]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (airline: Airline) => {
+    onChange(airline.name);
+    setIsOpen(false);
+  };
+
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src =
       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16'%3E%3Crect width='24' height='16' fill='%23f0f0f0'/%3E%3C/svg%3E";
   };
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full border border-gray-300 rounded-lg p-2.5 flex items-center justify-between bg-white text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
-      >
-        {selected ? (
-          <span className="flex items-center gap-2">
-            <div className="w-5 h-3.5 relative shrink-0">
-              <Image
-                src={selected.logo}
-                alt=""
-                width={20}
-                height={14}
-                className="object-contain"
-                onError={handleError}
-              />
-            </div>
-            {selected.name}
-          </span>
-        ) : (
-          <span className="text-gray-400">Select airline (optional)</span>
-        )}
-        <ChevronDown className="w-4 h-4 text-gray-400" />
-      </button>
-      {isOpen && (
+    <div ref={wrapperRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={safeValue}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder="Search airline (optional)"
+          className="w-full border border-gray-300 rounded-lg p-2.5 pr-8 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+        />
+        <Search className="absolute right-2.5 top-3 text-gray-400 w-4 h-4" />
+      </div>
+      {isOpen && filtered.length > 0 && (
         <ul className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-36 overflow-y-auto shadow-lg text-sm">
           <li
             onClick={() => {
@@ -197,13 +217,10 @@ function AirlineDropdown({
           >
             None
           </li>
-          {airlines.map((a, idx) => (
+          {filtered.map((a, idx) => (
             <li
               key={`${a.code}-${idx}`}
-              onClick={() => {
-                onChange(a.name);
-                setIsOpen(false);
-              }}
+              onClick={() => handleSelect(a)}
               className="px-2.5 py-1.5 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
             >
               <div className="w-5 h-3.5 relative shrink-0">
@@ -221,6 +238,7 @@ function AirlineDropdown({
           ))}
         </ul>
       )}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }
@@ -228,6 +246,7 @@ function AirlineDropdown({
 // ---------- Main Form ----------
 export default function BookingForm() {
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -255,19 +274,25 @@ export default function BookingForm() {
 
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
+    setSubmitError("");
     try {
       const res = await fetch("/api/submit-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+
       if (res.ok) {
         setSuccess(true);
         reset();
-        setTimeout(() => setSuccess(false), 5000);
+        setTimeout(() => setSuccess(false), 6000);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setSubmitError(errData.error || "Submission failed. Please try again.");
       }
     } catch (error) {
       console.error(error);
+      setSubmitError("Network error. Check your connection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -275,6 +300,7 @@ export default function BookingForm() {
 
   return (
     <div>
+      {/* Success */}
       {success && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm">
           <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
@@ -284,10 +310,15 @@ export default function BookingForm() {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
+      {/* Error */}
+      {submitError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <p className="text-red-800">{submitError}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* From */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -336,23 +367,17 @@ export default function BookingForm() {
             min={today}
             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
           />
-          {errors.departureDate && (
-            <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>
-          )}
+          {errors.departureDate && <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>}
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Return (optional)
-          </label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">Return (optional)</label>
           <input
             type="date"
             {...register("returnDate")}
             min={departureDate || today}
             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
           />
-          {errors.returnDate && (
-            <p className="text-red-500 text-xs mt-1">{errors.returnDate.message}</p>
-          )}
+          {errors.returnDate && <p className="text-red-500 text-xs mt-1">{errors.returnDate.message}</p>}
         </div>
 
         {/* Passengers */}
@@ -428,7 +453,7 @@ export default function BookingForm() {
           </label>
         </div>
 
-        {/* Preferred Airlines */}
+        {/* Preferred Airlines – now searchable */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-text-secondary mb-1">
             Preferred Airlines (optional)
@@ -437,16 +462,18 @@ export default function BookingForm() {
             name="preferredAirlines"
             control={control}
             render={({ field }) => (
-              <AirlineDropdown value={field.value || ""} onChange={field.onChange} />
+              <AirlineAutocomplete
+                value={field.value || ""}
+                onChange={field.onChange}
+                error={errors.preferredAirlines?.message}
+              />
             )}
           />
         </div>
 
         {/* Special Requests */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Special Requests
-          </label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">Special Requests</label>
           <textarea
             {...register("specialRequests")}
             rows={2}
@@ -511,7 +538,7 @@ export default function BookingForm() {
           </label>
         </div>
 
-        {/* Submit Button – Dark Blue with Golden Hover */}
+        {/* Submit Button */}
         <div className="sm:col-span-2">
           <button
             type="submit"
