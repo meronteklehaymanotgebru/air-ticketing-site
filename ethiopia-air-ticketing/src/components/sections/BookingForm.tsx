@@ -1,3 +1,4 @@
+// src/components/sections/BookingForm.tsx
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
@@ -135,7 +136,7 @@ function AirportAutocomplete({
   );
 }
 
-// ---------- Airline Autocomplete (NEW – type to filter) ----------
+// ---------- Airline Autocomplete (searchable) ----------
 function AirlineAutocomplete({
   value,
   onChange,
@@ -161,7 +162,7 @@ function AirlineAutocomplete({
   useEffect(() => {
     const query = safeValue.toLowerCase().trim();
     if (query.length === 0) {
-      setFiltered(airlines.slice(0, 8)); // show first few when empty
+      setFiltered(airlines.slice(0, 8));
       return;
     }
     const results = airlines.filter((a) =>
@@ -508,7 +509,7 @@ export default function BookingForm() {
                 value={field.value}
                 onChange={field.onChange}
                 className="w-full [&>input]:border [&>input]:border-gray-300 [&>input]:rounded-lg [&>input]:p-2.5 [&>input]:text-sm [&>input]:focus:ring-2 [&>input]:focus:ring-brand-900 [&>input]:focus:border-brand-900 [&>input]:outline-none"
-                placeholder="+251 9XX XXX XXX"
+                placeholder="+251 94 508 2026"
               />
             )}
           />
