@@ -4,8 +4,7 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
-import WhatsAppButton from "@/components/ui/WhatsAppButton";
-
+import ChatbotWidget from "@/components/ui/ChatbotWidget";
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -30,7 +29,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
-        <WhatsAppButton />
+        <ChatbotWidget />
       </body>
     </html>
   );
