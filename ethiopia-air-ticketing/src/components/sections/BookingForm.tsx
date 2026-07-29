@@ -1,48 +1,56 @@
-// src/components/sections/BookingForm.tsx
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect, useRef } from "react";
-import { Send, CheckCircle, ChevronDown, Search, AlertCircle } from "lucide-react";
+import { Send, CheckCircle, Search, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+
+// ---------- Configuration Constants ----------
+const WHATSAPP_NUMBER = "251945082026"; 
+const TELEGRAM_USERNAME = "Jonahwell"; 
 
 // ---------- Types ----------
 type Airport = { code: string; city: string; country: string };
 type Airline = { code: string; name: string; logo: string };
 
 // ---------- Schema ----------
-const bookingSchema = z.object({
-  from: z.string().min(1, "Required"),
-  to: z.string().min(1, "Required"),
-  departureDate: z.string().min(1, "Required").refine(
-    (val) => new Date(val) >= new Date(new Date().toDateString()),
-    { message: "Departure date cannot be in the past" }
-  ),
-  returnDate: z.string().optional(),
-  adults: z.number().min(1, "At least 1 adult"),
-  children: z.number().min(0),
-  infants: z.number().min(0),
-  travelClass: z.enum(["Economy", "Business", "First"]),
-  flexibleDates: z.boolean(),
-  preferredAirlines: z.string().optional(),
-  budget: z.enum(["under500", "500to1000", "above1000", "noLimit"]),
-  specialRequests: z.string().optional(),
-  name: z.string().min(1, "Required"),
-  phone: z.string().refine((val) => isValidPhoneNumber(val), {
-    message: "Invalid phone number",
-  }),
-  contactMethod: z.enum(["WhatsApp", "Telegram"]),
-}).refine(
-  (data) => {
-    if (data.returnDate && data.returnDate < data.departureDate) return false;
-    return true;
-  },
-  { message: "Return date must be after departure", path: ["returnDate"] }
-);
+const bookingSchema = z
+  .object({
+    from: z.string().min(1, "Required"),
+    to: z.string().min(1, "Required"),
+    departureDate: z
+      .string()
+      .min(1, "Required")
+      .refine(
+        (val) => new Date(val) >= new Date(new Date().toDateString()),
+        { message: "Departure date cannot be in the past" }
+      ),
+    returnDate: z.string().optional(),
+    adults: z.number().min(1, "At least 1 adult"),
+    children: z.number().min(0),
+    infants: z.number().min(0),
+    travelClass: z.enum(["Economy", "Business", "First"]),
+    flexibleDates: z.boolean(),
+    preferredAirlines: z.string().optional(),
+    budget: z.enum(["under500", "500to1000", "above1000", "noLimit"]),
+    specialRequests: z.string().optional(),
+    name: z.string().min(1, "Required"),
+    phone: z.string().refine((val) => isValidPhoneNumber(val), {
+      message: "Invalid phone number",
+    }),
+    contactMethod: z.enum(["WhatsApp", "Telegram"]),
+  })
+  .refine(
+    (data) => {
+      if (data.returnDate && data.returnDate < data.departureDate) return false;
+      return true;
+    },
+    { message: "Return date must be after departure", path: ["returnDate"] }
+  );
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
@@ -136,7 +144,7 @@ function AirportAutocomplete({
   );
 }
 
-// ---------- Airline Autocomplete (searchable) ----------
+// ---------- Airline Autocomplete ----------
 function AirlineAutocomplete({
   value,
   onChange,
@@ -249,6 +257,7 @@ export default function BookingForm() {
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -273,27 +282,100 @@ export default function BookingForm() {
   const departureDate = watch("departureDate");
   const today = new Date().toISOString().split("T")[0];
 
+  const formatBudget = (budgetKey: string) => {
+    switch (budgetKey) {
+      case "under500":
+        return "Under $500";
+      case "500to1000":
+        return "$500 - $1,000";
+      case "above1000":
+        return "Above $1,000";
+      default:
+        return "No limit";
+    }
+  };
+
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
     setSubmitError("");
+
     try {
-      const res = await fetch("/api/submit-booking", {
+      const passengerSummary = `${data.adults} Adult${data.adults > 1 ? "s" : ""}${
+        data.children > 0 ? `, ${data.children} Child${data.children > 1 ? "ren" : ""}` : ""
+      }${data.infants > 0 ? `, ${data.infants} Infant${data.infants > 1 ? "s" : ""}` : ""}`;
+
+      let rawMessage = "";
+
+      if (data.contactMethod === "WhatsApp") {
+        // Plain text version (No emojis)
+        rawMessage = `Hello, I would like to request a flight quote.
+
+FLIGHT DETAILS
+From: ${data.from}
+To: ${data.to}
+Departure Date: ${data.departureDate}
+${data.returnDate ? `Return Date: ${data.returnDate}` : "Trip Type: One Way"}
+Flexible Dates: ${data.flexibleDates ? "Yes (+/- 2 days)" : "No"}
+
+PASSENGER & CLASS DETAILS
+Passengers: ${passengerSummary}
+Class: ${data.travelClass}
+Budget: ${formatBudget(data.budget)}
+${data.preferredAirlines ? `Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `Special Requests: ${data.specialRequests}\n` : ""}
+CONTACT INFORMATION
+Name: ${data.name}
+Phone: ${data.phone}
+
+Please let me know the available options. Thank you.`;
+      } else {
+        // Telegram version (With emojis)
+        rawMessage = `👋 Hello! I would like to request a flight quote.
+
+✈️ FLIGHT DETAILS
+🛫 From: ${data.from}
+🛬 To: ${data.to}
+🗓️ Departure: ${data.departureDate}
+${data.returnDate ? `🔄 Return: ${data.returnDate}` : "➡️ Trip Type: One Way"}
+📆 Flexible Dates: ${data.flexibleDates ? "Yes (±2 days)" : "No"}
+
+👥 PASSENGER & CLASS
+🎟️ Passengers: ${passengerSummary}
+💺 Travel Class: ${data.travelClass}
+💵 Budget Range: ${formatBudget(data.budget)}
+${data.preferredAirlines ? `✈️ Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `📝 Special Notes: ${data.specialRequests}\n` : ""}
+👤 CONTACT INFO
+Name: ${data.name}
+📱 Phone: ${data.phone}
+
+Please share the best available options! Thank you 😊`;
+      }
+
+      const encodedMessage = encodeURIComponent(rawMessage);
+
+      if (data.contactMethod === "WhatsApp") {
+        window.open(
+          `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`,
+          "_blank"
+        );
+      } else {
+        window.open(
+          `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`,
+          "_blank"
+        );
+      }
+
+      fetch("/api/submit-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      });
+      }).catch((err) => console.log("Backend logging skipped:", err));
 
-      if (res.ok) {
-        setSuccess(true);
-        reset();
-        setTimeout(() => setSuccess(false), 6000);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        setSubmitError(errData.error || "Submission failed. Please try again.");
-      }
+      setSuccess(true);
+      reset();
+      setTimeout(() => setSuccess(false), 6000);
     } catch (error) {
       console.error(error);
-      setSubmitError("Network error. Check your connection.");
+      setSubmitError("Failed to open messaging app. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -301,17 +383,17 @@ export default function BookingForm() {
 
   return (
     <div>
-      {/* Success */}
+      {/* Success Banner */}
       {success && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm">
           <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
           <p className="text-green-800">
-            Request sent! We will contact you via <strong>{selectedContactMethod}</strong> within 2 hours.
+            Request generated! Opening <strong>{selectedContactMethod}</strong> to send your details.
           </p>
         </div>
       )}
 
-      {/* Error */}
+      {/* Error Banner */}
       {submitError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm">
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
@@ -338,6 +420,7 @@ export default function BookingForm() {
             )}
           />
         </div>
+
         {/* To */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -368,17 +451,24 @@ export default function BookingForm() {
             min={today}
             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
           />
-          {errors.departureDate && <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>}
+          {errors.departureDate && (
+            <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>
+          )}
         </div>
+
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">Return (optional)</label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Return (optional)
+          </label>
           <input
             type="date"
             {...register("returnDate")}
             min={departureDate || today}
             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
           />
-          {errors.returnDate && <p className="text-red-500 text-xs mt-1">{errors.returnDate.message}</p>}
+          {errors.returnDate && (
+            <p className="text-red-500 text-xs mt-1">{errors.returnDate.message}</p>
+          )}
         </div>
 
         {/* Passengers */}
@@ -428,6 +518,7 @@ export default function BookingForm() {
             <option value="First">First</option>
           </select>
         </div>
+
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">Budget</label>
           <select
@@ -454,7 +545,7 @@ export default function BookingForm() {
           </label>
         </div>
 
-        {/* Preferred Airlines – now searchable */}
+        {/* Preferred Airlines */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-text-secondary mb-1">
             Preferred Airlines (optional)
@@ -474,7 +565,9 @@ export default function BookingForm() {
 
         {/* Special Requests */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-text-secondary mb-1">Special Requests</label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Special Requests
+          </label>
           <textarea
             {...register("specialRequests")}
             rows={2}
@@ -491,8 +584,11 @@ export default function BookingForm() {
             {...register("name")}
             className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
           />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+          )}
         </div>
+
         {/* Phone */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -509,17 +605,19 @@ export default function BookingForm() {
                 value={field.value}
                 onChange={field.onChange}
                 className="w-full [&>input]:border [&>input]:border-gray-300 [&>input]:rounded-lg [&>input]:p-2.5 [&>input]:text-sm [&>input]:focus:ring-2 [&>input]:focus:ring-brand-900 [&>input]:focus:border-brand-900 [&>input]:outline-none"
-                placeholder="+251 94 508 2026"
+                placeholder="+251 9XX XXX XXX"
               />
             )}
           />
-          {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+          )}
         </div>
 
         {/* Contact method */}
         <div className="sm:col-span-2 flex items-center gap-4">
-          <label className="text-xs font-medium text-text-secondary">Contact me via:</label>
-          <label className="flex items-center gap-1">
+          <label className="text-xs font-medium text-text-secondary">Send quotation via:</label>
+          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-brand-900">
             <input
               type="radio"
               value="WhatsApp"
@@ -528,7 +626,7 @@ export default function BookingForm() {
             />
             WhatsApp
           </label>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-brand-900">
             <input
               type="radio"
               value="Telegram"
@@ -544,10 +642,10 @@ export default function BookingForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 shadow-md"
+            className="w-full bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 shadow-md cursor-pointer"
           >
             <Send className="w-4 h-4" />
-            {isSubmitting ? "Sending..." : "Get Quote"}
+            {isSubmitting ? "Generating..." : `Get Quote on ${selectedContactMethod}`}
           </button>
         </div>
       </form>

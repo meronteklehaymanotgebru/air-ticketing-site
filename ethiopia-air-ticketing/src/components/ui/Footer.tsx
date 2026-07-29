@@ -1,4 +1,3 @@
-// src/components/ui/Footer.tsx
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, MapPin } from "lucide-react";
@@ -126,7 +125,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Copyright */}
         <div className="border-t border-gray-200 pt-6 text-center text-text-secondary text-xs sm:text-sm">
           &copy; {new Date().getFullYear()} Ethiopia Air Ticketing. All rights reserved.
         </div>
