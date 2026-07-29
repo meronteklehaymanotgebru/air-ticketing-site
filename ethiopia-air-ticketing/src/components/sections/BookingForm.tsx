@@ -4,33 +4,36 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect, useRef } from "react";
-import { Send, CheckCircle, Search, AlertCircle } from "lucide-react";
+import { CheckCircle, Search, AlertCircle, Plane } from "lucide-react";
 import Image from "next/image";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
-// ---------- Configuration Constants ----------
-const WHATSAPP_NUMBER = "251945082026"; 
-const TELEGRAM_USERNAME = "Jonahwell"; 
 
-// ---------- Types ----------
+const WHATSAPP_NUMBER = "251901421142"; 
+const TELEGRAM_USERNAME = "Asktravel2";  
+
 type Airport = { code: string; city: string; country: string };
 type Airline = { code: string; name: string; logo: string };
 
-// ---------- Schema ----------
 const bookingSchema = z
   .object({
-    from: z.string().min(1, "Required"),
-    to: z.string().min(1, "Required"),
+    from: z.string().min(1, "Departure city/airport is required"),
+    to: z.string().min(1, "Destination city/airport is required"),
     departureDate: z
       .string()
-      .min(1, "Required")
+      .min(1, "Departure date is required")
       .refine(
-        (val) => new Date(val) >= new Date(new Date().toDateString()),
+        (val) => {
+          const selected = new Date(val);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return selected >= today;
+        },
         { message: "Departure date cannot be in the past" }
       ),
     returnDate: z.string().optional(),
-    adults: z.number().min(1, "At least 1 adult"),
+    adults: z.number().min(1, "At least 1 adult is required"),
     children: z.number().min(0),
     infants: z.number().min(0),
     travelClass: z.enum(["Economy", "Business", "First"]),
@@ -38,9 +41,9 @@ const bookingSchema = z
     preferredAirlines: z.string().optional(),
     budget: z.enum(["under500", "500to1000", "above1000", "noLimit"]),
     specialRequests: z.string().optional(),
-    name: z.string().min(1, "Required"),
-    phone: z.string().refine((val) => isValidPhoneNumber(val), {
-      message: "Invalid phone number",
+    name: z.string().min(1, "Full name is required"),
+    phone: z.string().refine((val) => (val ? isValidPhoneNumber(val) : false), {
+      message: "Please enter a valid phone number",
     }),
     contactMethod: z.enum(["WhatsApp", "Telegram"]),
   })
@@ -49,12 +52,11 @@ const bookingSchema = z
       if (data.returnDate && data.returnDate < data.departureDate) return false;
       return true;
     },
-    { message: "Return date must be after departure", path: ["returnDate"] }
+    { message: "Return date must be on or after departure date", path: ["returnDate"] }
   );
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
-// ---------- Airport Autocomplete ----------
 function AirportAutocomplete({
   value,
   onChange,
@@ -121,30 +123,30 @@ function AirportAutocomplete({
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full border border-gray-300 rounded-lg p-2.5 pr-8 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+          aria-invalid={!!error}
+          className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 placeholder:text-gray-400 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium pr-10"
         />
-        <Search className="absolute right-2.5 top-3 text-gray-400 w-4 h-4" />
+        <Search className="absolute right-3.5 top-3.5 text-gray-400 w-4 h-4 pointer-events-none" />
       </div>
       {isOpen && filtered.length > 0 && (
-        <ul className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-36 overflow-y-auto shadow-lg text-sm">
+        <ul className="absolute z-30 w-full bg-white border border-gray-200 rounded-xl mt-1.5 max-h-48 overflow-y-auto shadow-xl text-sm py-1">
           {filtered.map((a) => (
             <li
               key={a.code}
               onClick={() => handleSelect(a)}
-              className="px-2.5 py-1.5 hover:bg-brand-500 hover:text-white cursor-pointer flex justify-between"
+              className="px-4 py-2.5 hover:bg-brand-gold/10 hover:text-brand-900 cursor-pointer flex justify-between items-center transition-colors font-medium"
             >
-              <span>{a.city}</span>
-              <span className="text-gray-400">{a.code}</span>
+              <span>{a.city}, {a.country}</span>
+              <span className="font-bold text-xs bg-gray-100 text-brand-900 px-2 py-0.5 rounded">{a.code}</span>
             </li>
           ))}
         </ul>
       )}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-rose-500 text-xs font-semibold mt-1.5">{error}</p>}
     </div>
   );
 }
 
-// ---------- Airline Autocomplete ----------
 function AirlineAutocomplete({
   value,
   onChange,
@@ -211,33 +213,33 @@ function AirlineAutocomplete({
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search airline (optional)"
-          className="w-full border border-gray-300 rounded-lg p-2.5 pr-8 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+          className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 placeholder:text-gray-400 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium pr-10"
         />
-        <Search className="absolute right-2.5 top-3 text-gray-400 w-4 h-4" />
+        <Search className="absolute right-3.5 top-3.5 text-gray-400 w-4 h-4 pointer-events-none" />
       </div>
       {isOpen && filtered.length > 0 && (
-        <ul className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-36 overflow-y-auto shadow-lg text-sm">
+        <ul className="absolute z-30 w-full bg-white border border-gray-200 rounded-xl mt-1.5 max-h-48 overflow-y-auto shadow-xl text-sm py-1">
           <li
             onClick={() => {
               onChange("");
               setIsOpen(false);
             }}
-            className="px-2.5 py-1.5 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer font-medium text-gray-500"
           >
-            None
+            Any Airline (Best Price)
           </li>
           {filtered.map((a, idx) => (
             <li
               key={`${a.code}-${idx}`}
               onClick={() => handleSelect(a)}
-              className="px-2.5 py-1.5 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+              className="px-4 py-2.5 hover:bg-brand-gold/10 hover:text-brand-900 cursor-pointer flex items-center gap-3 transition-colors font-medium"
             >
-              <div className="w-5 h-3.5 relative shrink-0">
+              <div className="w-6 h-4 relative shrink-0">
                 <Image
                   src={a.logo}
-                  alt=""
-                  width={20}
-                  height={14}
+                  alt={a.name}
+                  width={24}
+                  height={16}
                   className="object-contain"
                   onError={handleError}
                 />
@@ -247,12 +249,11 @@ function AirlineAutocomplete({
           ))}
         </ul>
       )}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-rose-500 text-xs font-semibold mt-1.5">{error}</p>}
     </div>
   );
 }
 
-// ---------- Main Form ----------
 export default function BookingForm() {
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -291,7 +292,7 @@ export default function BookingForm() {
       case "above1000":
         return "Above $1,000";
       default:
-        return "No limit";
+        return "Flexible / Best Available Rate";
     }
   };
 
@@ -307,43 +308,41 @@ export default function BookingForm() {
       let rawMessage = "";
 
       if (data.contactMethod === "WhatsApp") {
-        // Plain text version (No emojis)
-        rawMessage = `Hello, I would like to request a flight quote.
+        rawMessage = `Hello Ask Travel, I would like to book a flight with the following details:
 
 FLIGHT DETAILS
 From: ${data.from}
 To: ${data.to}
 Departure Date: ${data.departureDate}
-${data.returnDate ? `Return Date: ${data.returnDate}` : "Trip Type: One Way"}
+${data.returnDate ? `Return Date: ${data.returnDate}` : "Trip Type: One-Way"}
 Flexible Dates: ${data.flexibleDates ? "Yes (+/- 2 days)" : "No"}
 
-PASSENGER & CLASS DETAILS
+PASSENGER & CLASS
 Passengers: ${passengerSummary}
-Class: ${data.travelClass}
-Budget: ${formatBudget(data.budget)}
+Cabin Class: ${data.travelClass}
+Budget Preference: ${formatBudget(data.budget)}
 ${data.preferredAirlines ? `Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `Special Requests: ${data.specialRequests}\n` : ""}
-CONTACT INFORMATION
+CONTACT DETAILS
 Name: ${data.name}
 Phone: ${data.phone}
 
-Please let me know the available options. Thank you.`;
+Please share the available flight options and prices. Thank you!`;
       } else {
-        // Telegram version (With emojis)
-        rawMessage = `👋 Hello! I would like to request a flight quote.
+        rawMessage = `👋 Hello Ask Travel! I would like to book a flight.
 
 ✈️ FLIGHT DETAILS
 🛫 From: ${data.from}
 🛬 To: ${data.to}
 🗓️ Departure: ${data.departureDate}
-${data.returnDate ? `🔄 Return: ${data.returnDate}` : "➡️ Trip Type: One Way"}
+${data.returnDate ? `🔄 Return: ${data.returnDate}` : "➡️ Trip Type: One-Way"}
 📆 Flexible Dates: ${data.flexibleDates ? "Yes (±2 days)" : "No"}
 
 👥 PASSENGER & CLASS
 🎟️ Passengers: ${passengerSummary}
-💺 Travel Class: ${data.travelClass}
-💵 Budget Range: ${formatBudget(data.budget)}
+💺 Cabin Class: ${data.travelClass}
+💵 Budget Preference: ${formatBudget(data.budget)}
 ${data.preferredAirlines ? `✈️ Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `📝 Special Notes: ${data.specialRequests}\n` : ""}
-👤 CONTACT INFO
+👤 CONTACT DETAILS
 Name: ${data.name}
 📱 Phone: ${data.phone}
 
@@ -375,37 +374,35 @@ Please share the best available options! Thank you 😊`;
       setTimeout(() => setSuccess(false), 6000);
     } catch (error) {
       console.error(error);
-      setSubmitError("Failed to open messaging app. Please try again.");
+      setSubmitError("Failed to open messaging app. Please try again or reach out to us directly.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
-      {/* Success Banner */}
+    <div className="w-full">
       {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm">
-          <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-          <p className="text-green-800">
-            Request generated! Opening <strong>{selectedContactMethod}</strong> to send your details.
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm sm:text-base font-medium animate-in fade-in duration-200">
+          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p>
+            Flight request prepared! Redirecting you to <strong>{selectedContactMethod}</strong> to confirm with an agent.
           </p>
         </div>
       )}
 
-      {/* Error Banner */}
       {submitError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-          <p className="text-red-800">{submitError}</p>
+        <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-rose-800 text-sm sm:text-base font-medium animate-in fade-in duration-200">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          <p>{submitError}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5" noValidate>
         {/* From */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            From <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            From <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="from"
@@ -414,7 +411,7 @@ Please share the best available options! Thank you 😊`;
               <AirportAutocomplete
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Departure city"
+                placeholder="City or Airport (e.g. Addis Ababa)"
                 error={errors.from?.message}
               />
             )}
@@ -423,8 +420,8 @@ Please share the best available options! Thank you 😊`;
 
         {/* To */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            To <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            To <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="to"
@@ -433,122 +430,124 @@ Please share the best available options! Thank you 😊`;
               <AirportAutocomplete
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Destination city"
+                placeholder="City or Airport (e.g. Dubai)"
                 error={errors.to?.message}
               />
             )}
           />
         </div>
 
-        {/* Dates */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Departure <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Departure Date <span className="text-rose-500">*</span>
           </label>
           <input
             type="date"
             {...register("departureDate")}
             min={today}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
           />
           {errors.departureDate && (
-            <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>
+            <p className="text-rose-500 text-xs font-semibold mt-1.5">{errors.departureDate.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Return (optional)
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Return Date <span className="text-gray-400 font-normal lowercase">(optional)</span>
           </label>
           <input
             type="date"
             {...register("returnDate")}
             min={departureDate || today}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
           />
           {errors.returnDate && (
-            <p className="text-red-500 text-xs mt-1">{errors.returnDate.message}</p>
+            <p className="text-rose-500 text-xs font-semibold mt-1.5">{errors.returnDate.message}</p>
           )}
         </div>
 
-        {/* Passengers */}
         <div className="sm:col-span-2 grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">
-              Adults <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+              Adults <span className="text-gray-400 font-normal lowercase">(12+)</span>
             </label>
             <input
               type="number"
               {...register("adults", { valueAsNumber: true })}
               min={1}
-              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Children</label>
+            <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+              Children <span className="text-gray-400 font-normal lowercase">(2-11)</span>
+            </label>
             <input
               type="number"
               {...register("children", { valueAsNumber: true })}
               min={0}
-              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Infants</label>
+            <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+              Infants <span className="text-gray-400 font-normal lowercase">(&lt;2)</span>
+            </label>
             <input
               type="number"
               {...register("infants", { valueAsNumber: true })}
               min={0}
-              className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
             />
           </div>
         </div>
 
-        {/* Class & Budget */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Class <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Cabin Class <span className="text-rose-500">*</span>
           </label>
           <select
             {...register("travelClass")}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium cursor-pointer"
           >
             <option value="Economy">Economy</option>
             <option value="Business">Business</option>
-            <option value="First">First</option>
+            <option value="First">First Class</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">Budget</label>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Target Budget
+          </label>
           <select
             {...register("budget")}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium cursor-pointer"
           >
-            <option value="noLimit">No limit</option>
+            <option value="noLimit">Flexible / Best Available Rate</option>
             <option value="under500">Under $500</option>
-            <option value="500to1000">$500 – $1000</option>
-            <option value="above1000">Above $1000</option>
+            <option value="500to1000">$500 – $1,000</option>
+            <option value="above1000">Above $1,000</option>
           </select>
         </div>
 
-        {/* Flexible dates */}
-        <div className="sm:col-span-2 flex items-center gap-2">
+        <div className="sm:col-span-2 flex items-center gap-2.5 pt-1">
           <input
             type="checkbox"
             {...register("flexibleDates")}
             id="flexible"
-            className="w-4 h-4 rounded focus:ring-brand-900 text-brand-900"
+            className="w-4 h-4 rounded border-gray-300 text-brand-gold focus:ring-brand-900 cursor-pointer"
           />
-          <label htmlFor="flexible" className="text-xs text-text-secondary">
-            My dates are flexible (±2 days)
+          <label htmlFor="flexible" className="text-sm text-text-secondary font-medium cursor-pointer select-none">
+            My travel dates are flexible (±2 days for best fare)
           </label>
         </div>
 
         {/* Preferred Airlines */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Preferred Airlines (optional)
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Preferred Airline <span className="text-gray-400 font-normal lowercase">(optional)</span>
           </label>
           <Controller
             name="preferredAirlines"
@@ -563,36 +562,36 @@ Please share the best available options! Thank you 😊`;
           />
         </div>
 
-        {/* Special Requests */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Special Requests
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Special Requests & Notes
           </label>
           <textarea
             {...register("specialRequests")}
             rows={2}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            placeholder="e.g. Extra baggage allowance, aisle seats, visa guidance..."
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-4 text-base text-brand-900 placeholder:text-gray-400 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none resize-none transition-all duration-200 font-medium"
           />
         </div>
 
         {/* Name */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Your Name <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Your Full Name <span className="text-rose-500">*</span>
           </label>
           <input
             {...register("name")}
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-900 focus:border-brand-900 outline-none"
+            placeholder="e.g. Abebe Bikila"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
           />
           {errors.name && (
-            <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+            <p className="text-rose-500 text-xs font-semibold mt-1.5">{errors.name.message}</p>
           )}
         </div>
 
-        {/* Phone */}
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            Phone Number <span className="text-red-500">*</span>
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Phone Number <span className="text-rose-500">*</span>
           </label>
           <Controller
             name="phone"
@@ -604,48 +603,50 @@ Please share the best available options! Thank you 😊`;
                 countryCallingCodeEditable={false}
                 value={field.value}
                 onChange={field.onChange}
-                className="w-full [&>input]:border [&>input]:border-gray-300 [&>input]:rounded-lg [&>input]:p-2.5 [&>input]:text-sm [&>input]:focus:ring-2 [&>input]:focus:ring-brand-900 [&>input]:focus:border-brand-900 [&>input]:outline-none"
+                className="w-full [&>input]:bg-gray-50/50 [&>input]:border [&>input]:border-gray-200 [&>input]:rounded-xl [&>input]:px-4 [&>input]:py-3 [&>input]:text-base [&>input]:text-brand-900 [&>input]:focus:bg-white [&>input]:focus:border-brand-900 [&>input]:focus:ring-1 [&>input]:focus:ring-brand-900 [&>input]:outline-none [&>input]:font-medium"
                 placeholder="+251 9XX XXX XXX"
               />
             )}
           />
           {errors.phone && (
-            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+            <p className="text-rose-500 text-xs font-semibold mt-1.5">{errors.phone.message}</p>
           )}
         </div>
 
-        {/* Contact method */}
-        <div className="sm:col-span-2 flex items-center gap-4">
-          <label className="text-xs font-medium text-text-secondary">Send quotation via:</label>
-          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-brand-900">
-            <input
-              type="radio"
-              value="WhatsApp"
-              {...register("contactMethod")}
-              className="w-4 h-4 text-brand-900 focus:ring-brand-900"
-            />
-            WhatsApp
+        <div className="sm:col-span-2 pt-2 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <label className="text-sm font-bold text-brand-900">
+            Confirm & Send Via:
           </label>
-          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-brand-900">
-            <input
-              type="radio"
-              value="Telegram"
-              {...register("contactMethod")}
-              className="w-4 h-4 text-brand-900 focus:ring-brand-900"
-            />
-            Telegram
-          </label>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer text-base font-bold text-brand-900">
+              <input
+                type="radio"
+                value="WhatsApp"
+                {...register("contactMethod")}
+                className="w-4 h-4 text-brand-gold focus:ring-brand-900"
+              />
+              WhatsApp
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-base font-bold text-brand-900">
+              <input
+                type="radio"
+                value="Telegram"
+                {...register("contactMethod")}
+                className="w-4 h-4 text-brand-gold focus:ring-brand-900"
+              />
+              Telegram
+            </label>
+          </div>
         </div>
 
-        {/* Submit Button */}
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-2 pt-2">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 shadow-md cursor-pointer"
+            className="w-full bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white font-bold text-base sm:text-lg py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-50 shadow-md active:scale-[0.99] cursor-pointer"
           >
-            <Send className="w-4 h-4" />
-            {isSubmitting ? "Generating..." : `Get Quote on ${selectedContactMethod}`}
+            <Plane className="w-5 h-5" />
+            <span>{isSubmitting ? "Finding Flights..." : `Find Flights via ${selectedContactMethod}`}</span>
           </button>
         </div>
       </form>

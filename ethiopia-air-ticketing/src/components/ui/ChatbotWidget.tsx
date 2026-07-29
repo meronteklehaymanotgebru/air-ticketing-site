@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Bot, User, RotateCcw, ArrowRight, Loader2 } from "lucide-react";
 
-// ---------- Configuration ----------
-const WHATSAPP_NUMBER = "251945082026";
-const TELEGRAM_USERNAME = "Jonahwell";
-const COMPANY_NAME = "Ethiopia Air Ticketing";
+const WHATSAPP_NUMBER = "251901421142";
+const TELEGRAM_USERNAME = "Asktravel2";
+const COMPANY_NAME = "Ask Travel Trading PLC";
+const SLOGAN = "JUST ASK WE FLY YOU";
 
 type Message = {
   id: string;
@@ -24,7 +24,6 @@ type BookingState = {
   contactMethod?: "WhatsApp" | "Telegram";
 };
 
-// Helper: Strips wrapping quotes/ticks returned by AI formatting
 const sanitizeText = (text: string): string => {
   if (!text) return "";
   let clean = text.trim();
@@ -48,8 +47,8 @@ export default function ChatbotWidget() {
     {
       id: "1",
       sender: "bot",
-      text: sanitizeText(`Selam! 🌼 Welcome to ${COMPANY_NAME}.\nHow can we help you travel today?`),
-      options: ["✈️ Find a Cheap Ticket", "💳 How to Pay (Telebirr/CBE)", "📞 Talk to an Agent"],
+      text: sanitizeText(`Selam! 🌼 Welcome to ${COMPANY_NAME}.\n"${SLOGAN}"\n\nHow can our IATA-certified team help you travel today?`),
+      options: ["✈️ Find a Cheap Ticket", "💳 Payment & Visa Guidance", "📞 Talk to an Agent"],
     },
   ]);
 
@@ -61,7 +60,6 @@ export default function ChatbotWidget() {
     }
   }, [messages, isLoading, isOpen]);
 
-  // ---------- Call API Route ----------
   const fetchGeminiReply = async (userText: string): Promise<string> => {
     try {
       const res = await fetch("/api/chat", {
@@ -70,20 +68,21 @@ export default function ChatbotWidget() {
         body: JSON.stringify({ message: userText }),
       });
 
-      if (!res.ok) throw new Error("API route error");
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
 
       const data = await res.json();
       return sanitizeText(
         data.reply ||
-          "Selam! I am here to help. Would you like to check ticket prices or talk to an agent?"
+          "Selam! I am here to help. Would you like to check flight prices or speak directly with an agent?"
       );
     } catch (err) {
       console.error("Chat API error:", err);
-      return `Selam! You can contact our support agent directly via WhatsApp (+251 94 508 2026) or Telegram (@${TELEGRAM_USERNAME}) for immediate assistance.`;
+      return `Selam! You can contact our support team directly via WhatsApp (+251 901 421 142) or Telegram (@${TELEGRAM_USERNAME}) for immediate assistance.`;
     }
   };
 
-  // ---------- Guided Ticket Flow Prompts ----------
   const getNextBookingQuestion = (
     data: BookingState
   ): { text: string; options?: string[] } | null => {
@@ -130,23 +129,21 @@ export default function ChatbotWidget() {
     if (!data.travelClass) {
       return {
         text: "Which class do you prefer?",
-        options: ["Economy Class", "Cloud Nine / Business"],
+        options: ["Economy Class", "Business / Cloud Nine"],
       };
     }
     if (!data.contactMethod) {
       return {
-        text: "Where should our agent send your ticket options and exact pricing?",
+        text: "Where should our agent send your best airline options and exact pricing?",
         options: ["WhatsApp", "Telegram"],
       };
     }
     return null;
   };
 
-  // ---------- Process Inputs ----------
   const processUserInput = async (userText: string) => {
     if (!userText.trim() || isLoading) return;
 
-    // Handle explicit action chips gracefully
     if (
       userText === "✍️ Type My Own City" ||
       userText === "✍️ Type My Own Destination" ||
@@ -176,7 +173,6 @@ export default function ChatbotWidget() {
 
     const lowerInput = cleanInput.toLowerCase();
 
-    // Trigger ticket flow
     if (
       !isBookingMode &&
       (lowerInput.includes("book") ||
@@ -193,7 +189,7 @@ export default function ChatbotWidget() {
           {
             id: (Date.now() + 1).toString(),
             sender: "bot",
-            text: sanitizeText(`Great! Let's find your ticket. ✈️\n\n${nextQ.text}`),
+            text: sanitizeText(`Great! Let's find your ticket options. ✈️\n\n${nextQ.text}`),
             options: nextQ.options,
           },
         ]);
@@ -201,7 +197,6 @@ export default function ChatbotWidget() {
       return;
     }
 
-    // Active ticket booking slot-filling
     if (isBookingMode) {
       const updatedData = { ...bookingData };
 
@@ -241,7 +236,7 @@ export default function ChatbotWidget() {
             id: (Date.now() + 1).toString(),
             sender: "bot",
             text: sanitizeText(
-              `All set! Click the button below to send your details to our agent on ${updatedData.contactMethod}. We will send you the best available prices right away!`
+              `All set! Click the button below to send your flight inquiry to our travel team on ${updatedData.contactMethod}. We will send you the best IATA fares right away!`
             ),
           },
         ]);
@@ -249,7 +244,6 @@ export default function ChatbotWidget() {
       return;
     }
 
-    // General Q&A via Gemini API
     setIsLoading(true);
     const aiReply = await fetchGeminiReply(cleanInput);
     setIsLoading(false);
@@ -273,8 +267,8 @@ export default function ChatbotWidget() {
       {
         id: Date.now().toString(),
         sender: "bot",
-        text: sanitizeText(`Selam! 🌼 Welcome to ${COMPANY_NAME}.\nHow can we help you travel today?`),
-        options: ["✈️ Find a Cheap Ticket", "💳 How to Pay (Telebirr/CBE)", "📞 Talk to an Agent"],
+        text: sanitizeText(`Selam! 🌼 Welcome to ${COMPANY_NAME}.\n"${SLOGAN}"\n\nHow can our team help you travel today?`),
+        options: ["✈️ Find a Cheap Ticket", "💳 Payment & Visa Guidance", "📞 Talk to an Agent"],
       },
     ]);
   };
@@ -284,9 +278,9 @@ export default function ChatbotWidget() {
     let rawMessage = "";
 
     if (contactMethod === "WhatsApp") {
-      rawMessage = `Hello Abyssinia Travel, I need help booking a ticket.
+      rawMessage = `Selam Ask Travel! 🌼 I need help booking a ticket.
 
-TRIP DETAILS
+TRIP INQUIRY
 From: ${from || "Not specified"}
 To: ${to || "Not specified"}
 Travel Date: ${departureDate || "Not specified"}
@@ -295,14 +289,14 @@ PASSENGERS & SEAT
 Passengers: ${passengers || "1 Person"}
 Class: ${travelClass || "Economy"}
 
-Please send me your best available ticket prices. Thank you!`;
+Please send me your best available ticket prices and options. Thank you!`;
 
       window.open(
         `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(rawMessage)}`,
         "_blank"
       );
     } else {
-      rawMessage = `Selam Abyssinia Travel! 🌼 I would like to check ticket prices.
+      rawMessage = `Selam Ask Travel! 🌼 I would like to check ticket prices.
 
 ✈️ TRIP DETAILS
 🛫 Flying From: ${from || "Not specified"}
@@ -313,7 +307,7 @@ Please send me your best available ticket prices. Thank you!`;
 🎟️ Passengers: ${passengers || "1 Person"}
 💺 Class: ${travelClass || "Economy"}
 
-Please send me your best prices! Thank you 😊`;
+Please send me your best available fares! Thank you 😊`;
 
       window.open(
         `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(rawMessage)}`,
@@ -332,11 +326,8 @@ Please send me your best prices! Thank you 😊`;
 
   return (
     <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 flex flex-col items-end">
-      {/* Responsive Chat Window */}
       {isOpen && (
         <div className="w-[calc(100vw-1.5rem)] sm:w-[380px] h-[calc(100vh-6rem)] max-h-[580px] min-h-[400px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden mb-3 sm:mb-4 transition-all duration-200">
-          
-          {/* Header */}
           <div className="bg-brand-900 text-white p-3.5 sm:p-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-brand-gold text-brand-900 flex items-center justify-center font-bold shrink-0">
@@ -347,7 +338,7 @@ Please send me your best prices! Thank you 😊`;
                   {COMPANY_NAME}
                 </h3>
                 <span className="text-[10px] text-green-300 font-medium block">
-                  Online • AI Ticket Assistant
+                  IATA Accredited • AI Assistant
                 </span>
               </div>
             </div>
@@ -370,7 +361,6 @@ Please send me your best prices! Thank you 😊`;
             </div>
           </div>
 
-          {/* Messages Stream */}
           <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-gray-50/50 text-xs sm:text-sm">
             {messages.map((m) => (
               <div
@@ -395,7 +385,6 @@ Please send me your best prices! Thank you 😊`;
                     {m.text}
                   </p>
 
-                  {/* Suggestion Chips */}
                   {m.options && !isLoading && (
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {m.options.map((opt) => (
@@ -418,7 +407,6 @@ Please send me your best prices! Thank you 😊`;
               </div>
             ))}
 
-            {/* Typing Loader */}
             {isLoading && (
               <div className="flex gap-2 justify-start items-center">
                 <div className="w-6 h-6 rounded-full bg-brand-900 text-white flex items-center justify-center shrink-0">
@@ -433,7 +421,6 @@ Please send me your best prices! Thank you 😊`;
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer Input */}
           <div className="p-3 bg-white border-t border-gray-100 shrink-0">
             {isBookingComplete ? (
               <button
@@ -472,7 +459,6 @@ Please send me your best prices! Thank you 😊`;
         </div>
       )}
 
-      {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white p-3.5 sm:p-4 rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 group"
