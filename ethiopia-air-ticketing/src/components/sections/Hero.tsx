@@ -25,9 +25,8 @@ export default function Hero() {
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-brand-900/75 z-10" />
 
-      {/* Content Container */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
-        <div className="max-w-2xl text-center lg:text-left">
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
+        <div className="max-w-2xl text-center md:mx-auto">
           
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md text-brand-gold border border-brand-gold/30 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold mb-6">
             <Award className="w-4 h-4 text-brand-gold shrink-0" />
@@ -35,15 +34,15 @@ export default function Hero() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-white tracking-tight drop-shadow-md">
-            JUST ASK <br />
-            <span className="text-brand-gold">WE FLY YOU.</span>
+            JUST ASK 
+            <span className="text-brand-gold"> WE FLY YOU.</span>
           </h1>
 
-          <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-200 leading-relaxed font-normal">
+          <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-200 leading-relaxed font-normal max-w-xl mx-auto">
             We take care of every booking detail so you can relax and look forward to your trip.
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:max-w-md mx-auto lg:mx-0 w-full">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto w-full">
             <Link
               href="/booking"
               className="h-11 sm:h-13 w-full flex items-center justify-center bg-brand-gold hover:bg-brand-200 hover:text-white text-brand-900 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 shadow-lg border border-white/10 text-center whitespace-nowrap leading-none box-border"
@@ -54,14 +53,13 @@ export default function Hero() {
               href="https://wa.me/251901421142?text=Selam%20Ask%20Travel!%20I%20would%20like%20to%20get%20a%20flight%20quotation."
               target="_blank"
               rel="noopener noreferrer"
-              className="h-12 sm:h-14 w-full flex items-center justify-center bg-brand-900 hover:bg-brand-900 hover:text-brand-gold text-white rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200  border border-white/10 text-center whitespace-nowrap leading-none box-border"
+              className="h-12 sm:h-14 w-full flex items-center justify-center bg-brand-900 hover:bg-brand-900 hover:text-brand-gold text-white rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 border border-white/10 text-center whitespace-nowrap leading-none box-border"
             >
               Chat on WhatsApp
             </a>
           </div>
 
-
-          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center lg:justify-start items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
+          <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-brand-gold shrink-0" />
               <span>Direct Airline Issuance</span>

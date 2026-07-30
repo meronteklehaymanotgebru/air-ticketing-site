@@ -4,14 +4,14 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle, Search, AlertCircle, Plane } from "lucide-react";
+import { CheckCircle, Search, AlertCircle, Plane, Mail, Loader2 } from "lucide-react";
 import Image from "next/image";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
-
-const WHATSAPP_NUMBER = "251901421142"; 
-const TELEGRAM_USERNAME = "Asktravel2";  
+const COMPANY_EMAIL = "info@asktravel.com"; 
+const WHATSAPP_NUMBER = "251901421142";
+const TELEGRAM_USERNAME = "Asktravel2";
 
 type Airport = { code: string; city: string; country: string };
 type Airline = { code: string; name: string; logo: string };
@@ -45,7 +45,8 @@ const bookingSchema = z
     phone: z.string().refine((val) => (val ? isValidPhoneNumber(val) : false), {
       message: "Please enter a valid phone number",
     }),
-    contactMethod: z.enum(["WhatsApp", "Telegram"]),
+    email: z.string().optional(),
+    contactMethod: z.enum(["Email", "WhatsApp", "Telegram"]),
   })
   .refine(
     (data) => {
@@ -53,6 +54,19 @@ const bookingSchema = z
       return true;
     },
     { message: "Return date must be on or after departure date", path: ["returnDate"] }
+  )
+  .refine(
+    (data) => {
+      if (data.contactMethod === "Email") {
+        if (!data.email || !data.email.trim()) return false;
+        return z.string().email().safeParse(data.email).success;
+      }
+      if (data.email && data.email.trim().length > 0) {
+        return z.string().email().safeParse(data.email).success;
+      }
+      return true;
+    },
+    { message: "Please enter a valid email address", path: ["email"] }
   );
 
 type BookingFormData = z.infer<typeof bookingSchema>;
@@ -256,6 +270,7 @@ function AirlineAutocomplete({
 
 export default function BookingForm() {
   const [success, setSuccess] = useState(false);
+  const [submittedMethod, setSubmittedMethod] = useState<"Email" | "WhatsApp" | "Telegram">("Email");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -275,7 +290,8 @@ export default function BookingForm() {
       travelClass: "Economy",
       flexibleDates: false,
       budget: "noLimit",
-      contactMethod: "WhatsApp",
+      contactMethod: "Email",
+      email: "",
     },
   });
 
@@ -296,97 +312,128 @@ export default function BookingForm() {
     }
   };
 
-  const onSubmit = async (data: BookingFormData) => {
-    setIsSubmitting(true);
-    setSubmitError("");
+const onSubmit = async (data: BookingFormData) => {
+  setIsSubmitting(true);
+  setSubmitError("");
 
-    try {
-      const passengerSummary = `${data.adults} Adult${data.adults > 1 ? "s" : ""}${
-        data.children > 0 ? `, ${data.children} Child${data.children > 1 ? "ren" : ""}` : ""
-      }${data.infants > 0 ? `, ${data.infants} Infant${data.infants > 1 ? "s" : ""}` : ""}`;
+  try {
+    const passengerSummary = `${data.adults} Adult${data.adults > 1 ? "s" : ""}${
+      data.children > 0 ? `, ${data.children} Child${data.children > 1 ? "ren" : ""}` : ""
+    }${data.infants > 0 ? `, ${data.infants} Infant${data.infants > 1 ? "s" : ""}` : ""}`;
 
-      let rawMessage = "";
+    const flexibleStatus = data.flexibleDates ? "Yes (±2 days)" : "No";
+    const budgetText = formatBudget(data.budget);
+    const returnInfo = data.returnDate || "One-Way";
 
-      if (data.contactMethod === "WhatsApp") {
-        rawMessage = `Hello Ask Travel, I would like to book a flight with the following details:
+    if (data.contactMethod === "Email") {
+      // 1. Professional Email Format
+      const emailSubject = encodeURIComponent(
+        `[Flight Inquiry] ${data.from} to ${data.to} - ${data.name} (${data.departureDate})`
+      );
 
-FLIGHT DETAILS
-From: ${data.from}
-To: ${data.to}
-Departure Date: ${data.departureDate}
-${data.returnDate ? `Return Date: ${data.returnDate}` : "Trip Type: One-Way"}
-Flexible Dates: ${data.flexibleDates ? "Yes (+/- 2 days)" : "No"}
+      const emailBody = `Dear Ask Travel Team,
+
+I would like to request a quote and availability for the following flight booking details:
+
+TRIP INFORMATION
+- Departure: ${data.from}
+- Destination: ${data.to}
+- Departure Date: ${data.departureDate}
+- Return Date: ${returnInfo}
+- Flexible Dates: ${flexibleStatus}
+
+PASSENGER & CLASS PREFERENCES
+- Passengers: ${passengerSummary}
+- Cabin Class: ${data.travelClass}
+- Budget Target: ${budgetText}
+${data.preferredAirlines ? `- Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `- Special Requests: ${data.specialRequests}\n` : ""}
+CONTACT INFORMATION
+- Primary Contact: ${data.name}
+- Phone Number: ${data.phone}
+- Email Address: ${data.email || "N/A"}
+
+Please let me know the best available flight options and pricing at your earliest convenience.
+
+Best regards,
+${data.name}`;
+
+      const mailtoUrl = `mailto:${COMPANY_EMAIL}?subject=${emailSubject}&body=${encodeURIComponent(emailBody)}`;
+      window.open(mailtoUrl, "_blank");
+
+    } else if (data.contactMethod === "WhatsApp") {
+      // 2. WhatsApp: Emojis Removed
+      const waMessage = `FLIGHT BOOKING INQUIRY
+
+TRIP DETAILS
+- Departure: ${data.from}
+- Destination: ${data.to}
+- Departure Date: ${data.departureDate}
+- Return Date: ${returnInfo}
+- Flexible Dates: ${flexibleStatus}
 
 PASSENGER & CLASS
-Passengers: ${passengerSummary}
-Cabin Class: ${data.travelClass}
-Budget Preference: ${formatBudget(data.budget)}
-${data.preferredAirlines ? `Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `Special Requests: ${data.specialRequests}\n` : ""}
-CONTACT DETAILS
-Name: ${data.name}
-Phone: ${data.phone}
+- Passengers: ${passengerSummary}
+- Class: ${data.travelClass}
+- Budget: ${budgetText}
+${data.preferredAirlines ? `- Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `- Notes: ${data.specialRequests}\n` : ""}
+CONTACT
+- Name: ${data.name}
+- Phone: ${data.phone}
+${data.email ? `- Email: ${data.email}\n` : ""}
+Please provide the best available options. Thank you.`;
 
-Please share the available flight options and prices. Thank you!`;
-      } else {
-        rawMessage = `👋 Hello Ask Travel! I would like to book a flight.
+      window.open(
+        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
 
-✈️ FLIGHT DETAILS
+    } else if (data.contactMethod === "Telegram") {
+      const tgMessage = `Selam Ask Travel! 🌼 I would like to book a flight with the following details:
+
+✈️ TRIP DETAILS
 🛫 From: ${data.from}
 🛬 To: ${data.to}
 🗓️ Departure: ${data.departureDate}
-${data.returnDate ? `🔄 Return: ${data.returnDate}` : "➡️ Trip Type: One-Way"}
-📆 Flexible Dates: ${data.flexibleDates ? "Yes (±2 days)" : "No"}
+🔄 Return: ${returnInfo}
+📆 Flexible Dates: ${flexibleStatus}
 
 👥 PASSENGER & CLASS
 🎟️ Passengers: ${passengerSummary}
 💺 Cabin Class: ${data.travelClass}
-💵 Budget Preference: ${formatBudget(data.budget)}
-${data.preferredAirlines ? `✈️ Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `📝 Special Notes: ${data.specialRequests}\n` : ""}
+💵 Budget Preference: ${budgetText}
+${data.preferredAirlines ? `Preferred Airline: ${data.preferredAirlines}\n` : ""}${data.specialRequests ? `📝 Special Notes: ${data.specialRequests}\n` : ""}
 👤 CONTACT DETAILS
 Name: ${data.name}
 📱 Phone: ${data.phone}
-
+${data.email ? `📧 Email: ${data.email}\n` : ""}
 Please share the best available options! Thank you 😊`;
-      }
 
-      const encodedMessage = encodeURIComponent(rawMessage);
-
-      if (data.contactMethod === "WhatsApp") {
-        window.open(
-          `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`,
-          "_blank"
-        );
-      } else {
-        window.open(
-          `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`,
-          "_blank"
-        );
-      }
-
-      fetch("/api/submit-booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }).catch((err) => console.log("Backend logging skipped:", err));
-
-      setSuccess(true);
-      reset();
-      setTimeout(() => setSuccess(false), 6000);
-    } catch (error) {
-      console.error(error);
-      setSubmitError("Failed to open messaging app. Please try again or reach out to us directly.");
-    } finally {
-      setIsSubmitting(false);
+      window.open(
+        `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(tgMessage)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
-  };
 
+    setSubmittedMethod(data.contactMethod);
+    setSuccess(true);
+    reset();
+    setTimeout(() => setSuccess(false), 6000);
+  } catch (error: any) {
+    console.error(error);
+    setSubmitError("Failed to initiate contact. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   return (
     <div className="w-full">
       {success && (
         <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm sm:text-base font-medium animate-in fade-in duration-200">
           <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
           <p>
-            Flight request prepared! Redirecting you to <strong>{selectedContactMethod}</strong> to confirm with an agent.
+            Flight request prepared! Redirecting via {submittedMethod}...
           </p>
         </div>
       )}
@@ -399,7 +446,6 @@ Please share the best available options! Thank you 😊`;
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5" noValidate>
-        {/* From */}
         <div>
           <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
             From <span className="text-rose-500">*</span>
@@ -418,7 +464,6 @@ Please share the best available options! Thank you 😊`;
           />
         </div>
 
-        {/* To */}
         <div>
           <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
             To <span className="text-rose-500">*</span>
@@ -544,7 +589,6 @@ Please share the best available options! Thank you 😊`;
           </label>
         </div>
 
-        {/* Preferred Airlines */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
             Preferred Airline <span className="text-gray-400 font-normal lowercase">(optional)</span>
@@ -574,7 +618,6 @@ Please share the best available options! Thank you 😊`;
           />
         </div>
 
-        {/* Name */}
         <div>
           <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
             Your Full Name <span className="text-rose-500">*</span>
@@ -613,11 +656,38 @@ Please share the best available options! Thank you 😊`;
           )}
         </div>
 
-        <div className="sm:col-span-2 pt-2 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <label className="text-sm font-bold text-brand-900">
-            Confirm & Send Via:
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-2">
+            Email Address{" "}
+            {selectedContactMethod === "Email" ? (
+              <span className="text-rose-500">*</span>
+            ) : (
+              <span className="text-gray-400 font-normal lowercase">(optional)</span>
+            )}
           </label>
+          <input
+            type="email"
+            {...register("email")}
+            placeholder="e.g. abebe@example.com"
+            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-base text-brand-900 focus:bg-white focus:border-brand-900 focus:ring-1 focus:ring-brand-900 outline-none transition-all duration-200 font-medium"
+          />
+          {errors.email && (
+            <p className="text-rose-500 text-xs font-semibold mt-1.5">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="sm:col-span-2 pt-2 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <label className="text-sm font-bold text-brand-900">Confirm & Send Via:</label>
           <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer text-base font-bold text-brand-900">
+              <input
+                type="radio"
+                value="Email"
+                {...register("contactMethod")}
+                className="w-4 h-4 text-brand-gold focus:ring-brand-900"
+              />
+              Email
+            </label>
             <label className="flex items-center gap-2 cursor-pointer text-base font-bold text-brand-900">
               <input
                 type="radio"
@@ -645,8 +715,18 @@ Please share the best available options! Thank you 😊`;
             disabled={isSubmitting}
             className="w-full bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white font-bold text-base sm:text-lg py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-50 shadow-md active:scale-[0.99] cursor-pointer"
           >
-            <Plane className="w-5 h-5" />
-            <span>{isSubmitting ? "Finding Flights..." : `Find Flights via ${selectedContactMethod}`}</span>
+            {isSubmitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : selectedContactMethod === "Email" ? (
+              <Mail className="w-5 h-5" />
+            ) : (
+              <Plane className="w-5 h-5" />
+            )}
+            <span>
+              {isSubmitting
+                ? "Processing..."
+                : `Send Inquiry via ${selectedContactMethod}`}
+            </span>
           </button>
         </div>
       </form>

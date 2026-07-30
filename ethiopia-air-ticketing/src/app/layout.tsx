@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
@@ -9,7 +8,7 @@ const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-nunito",   // makes it available as a CSS variable
+  variable: "--font-nunito",  
 });
 
 export const metadata: Metadata = {
