@@ -46,7 +46,6 @@ const DESTINATIONS: Destination[] = [
     tag: "Global Capital",
     description: "The timeless capital of art, fashion, and romance framed by iconic historic monuments.",
   },
-  // Row 2
   {
     id: "zanzibar",
     title: "Zanzibar",
@@ -114,7 +113,6 @@ const DESTINATIONS: Destination[] = [
 ];
 
 export default function GalleryPage() {
-  // Track image sources per card to safely switch to a fallback if a local asset is missing
   const [imageSrcs, setImageSrcs] = useState<{ [key: string]: string }>(
     Object.fromEntries(DESTINATIONS.map((d) => [d.id, d.image]))
   );
@@ -128,13 +126,11 @@ export default function GalleryPage() {
 
   return (
     <div className="bg-white text-gray-900 min-h-screen antialiased pb-28">
-      
       {/* Hero Section */}
       <section className="relative bg-brand-900 text-white pt-10 pb-16 sm:pt-16 sm:pb-20 overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-[radial-gradient(#1D9BF0_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
 
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
-
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-white tracking-tight drop-shadow-md max-w-3xl mx-auto">
             Destination <span className="text-brand-gold">Gallery</span>
           </h1>
@@ -158,9 +154,8 @@ export default function GalleryPage() {
               <div
                 key={dest.id}
                 style={{ animationDelay: `${(idx % 4) * 80}ms` }}
-                className="group bg-white rounded-3xl overflow-hidden border border-gray-200/85 shadow-[0_8px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-500 ease-out flex flex-col justify-between animate-fade-in-up"
+                className="group bg-white rounded-3xl overflow-hidden border border-gray-200/85 shadow-[0_8px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-500 ease-out flex flex-col justify-between"
               >
-                {/* Uniform Image Header */}
                 <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
                   <Image
                     src={imageSrcs[dest.id]}
@@ -185,7 +180,6 @@ export default function GalleryPage() {
                   </div>
                 </div>
 
-                {/* Narrative Body */}
                 <div className="p-4 sm:p-5 flex flex-col justify-between space-y-3 bg-white flex-1">
                   <p className="text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">
                     {dest.description}
@@ -203,7 +197,6 @@ export default function GalleryPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
