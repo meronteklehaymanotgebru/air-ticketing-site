@@ -1,0 +1,466 @@
+Created At: 2026-07-31T05:12:45-07:00
+Completed At: 2026-07-31T05:12:45-07:00
+File Path: `file:///d:/projects/air-ticketing-site/ethiopia-air-ticketing/src/app/services/page.tsx`
+Total Lines: 458
+Total Bytes: 18409
+Showing lines 1 to 458
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: "use client";
+2: 
+3: import { useState } from "react";
+4: import Image from "next/image";
+5: import Link from "next/link";
+6: import {
+7:   Plane,
+8:   FileText,
+9:   Building2,
+10:   Briefcase,
+11:   Crown,
+12:   Globe2,
+13:   ArrowRight,
+14:   CheckCircle2,
+15:   Sparkles,
+16:   ShieldCheck,
+17:   Headphones,
+18:   CreditCard,
+19:   Car,
+20: } from "lucide-react";
+21: 
+22: const MAIN_SERVICE = {
+23:   title: "Flight Booking & Instant Ticket Issuance",
+24:   desc: "Our primary expertise. Fast, reliable domestic and international flight reservations with real-time seat locks and fast turnarounds.",
+25:   image:
+26:     "https://images.unsplash.com/photo-1512100356356-de1b84283e18?auto=format&fit=crop&q=80&w=1000",
+27:   features: [
+28:     "Domestic & International Flight Booking",
+29:     "Instant Ticket Issuance",
+30:     "Rebooking & Date Changes",
+31:     "Flight Refund Processing",
+32:   ],
+33: };
+34: 
+35: const CATEGORIES = [
+36:   { id: "all", label: "All Services" },
+37:   { id: "air", label: "✈️ Air Travel & Support" },
+38:   { id: "visa", label: "🛂 Visa & Protection" },
+39:   { id: "stay-tours", label: "🏨 Hotels, Tours & Transport" },
+40:   { id: "corp-vip", label: "⭐️ Corporate & VIP" },
+41: ];
+42: 
+43: const SERVICES_DATA = [
+44:   {
+45:     id: "air",
+46:     category: "air",
+47:     title: "Air Travel Services",
+48:     icon: Plane,
+49:     badge: "Core Service",
+50:     desc: "Complete ticketing solutions for all global and domestic routes.",
+51:     image:
+52:       "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=600",
+53:     items: [
+54:       "Domestic Flight Booking",
+55:       "International Flight Booking",
+56:       "Flight Ticket Issuance",
+57:       "Flight Ticket Rebooking & Date Changes",
+58:       "Flight Ticket Cancellation",
+59:       "Flight Refund Processing",
+60:       "Group Flight Reservations",
+61:       "Corporate Travel Management",
+62:       "Multi-City Flight Bookings",
+63:     ],
+64:   },
+65:   {
+66:     id: "visa",
+67:     category: "visa",
+68:     title: "Visa & Travel Documentation",
+69:     icon: FileText,
+70:     badge: "Documentation",
+71:     desc: "End-to-end guidance and filing assistance for smooth approvals.",
+72:     image:
+73:       "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600",
+74:     items: [
+75:       "Visa Application Assistance",
+76:       "Tourist Visa Services",
+77:       "Student Visa Assistance",
+78:       "Visa Appointment Booking",
+79:       "Travel Document Consultation",
+80:     ],
+81:   },
+82:   {
+83:     id: "hotels",
+84:     category: "stay-tours",
+85:     title: "Hotel & Accommodation",
+86:     icon: Building2,
+87:     badge: "Stays",
+88:     desc: "Worldwide reservations tailored to luxury, business, or budget needs.",
+89:     image:
+90:       "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=600",
+91:     items: [
+92:       "Hotel Reservations Worldwide",
+93:       "Budget Hotel Bookings",
+94:       "Business Hotel Reservations",
+95:       "Apartment & Resort Bookings",
+96:     ],
+97:   },
+98:   {
+99:     id: "transport",
+100:     category: "stay-tours",
+101:     title: "Ground Transportation",
+102:     icon: Car,
+103:     badge: "Transfers",
+104:     desc: "Seamless vehicle arrangements upon landing at your destination.",
+105:     image:
+106:       "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=600",
+107:     items: [
+108:       "Airport Transfer Arrangements",
+109:       "Car Rental Services",
+110:       "Chauffeur Services",
+111:     ],
+112:   },
+113:   {
+114:     id: "protection",
+115:     category: "visa",
+116:     title: "Travel Protection",
+117:     icon: ShieldCheck,
+118:     badge: "Insurance",
+119:     desc: "Comprehensive security policies shielding you against unexpected delays.",
+120:     image:
+121:       "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=600",
+122:     items: [
+123:       "Travel Insurance",
+124:       "Medical Travel Insurance",
+125:       "Trip Protection Plans",
+126:     ],
+127:   },
+128:   {
+129:     id: "tours",
+130:     category: "stay-tours",
+131:     title: "Holiday & Tour Packages",
+132:     icon: Globe2,
+133:     badge: "Vacations",
+134:     desc: "Handcrafted leisure and tour arrangements for families, pairs, and groups.",
+135:     image:
+136:       "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600",
+137:     items: [
+138:       "International Tour Packages",
+139:       "Domestic Tour Packages",
+140:       "Honeymoon Packages",
+141:       "Family Vacation Packages",
+142:       "Group Tours",
+143:       "Customized Travel Packages",
+144:     ],
+145:   },
+146:   {
+147:     id: "corporate",
+148:     category: "corp-vip",
+149:     title: "Corporate Travel Solutions",
+150:     icon: Briefcase,
+151:     badge: "Business",
+152:     desc: "Dedicated corporate account handling, compliance, and group itineraries.",
+153:     image:
+154:       "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=600",
+155:     items: [
+156:       "Business Travel Planning",
+157:       "Corporate Flight Bookings",
+158:       "Travel Policy Support",
+159:       "Conference & Event Travel",
+160:     ],
+161:   },
+162:   {
+163:     id: "premium-vip",
+164:     category: "corp-vip",
+165:     title: "VIP & Airport Assistance",
+166:     icon: Crown,
+167:     badge: "VIP Exclusive",
+168:     isLightVip: true,
+169:     desc: "White-glove airport reception, fast-tracking, and lounge arrangements.",
+170:     image:
+171:       "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600",
+172:     items: [
+173:       "Airport Meet & Greet",
+174:       "CIP/VIP Airport Assistance",
+175:       "Special Assistance Requests (SSR)",
+176:       "Lounge Access Arrangements (where available)",
+177:     ],
+178:   },
+179:   {
+180:     id: "support",
+181:     category: "air",
+182:     title: "Travel Support & Advisory",
+183:     icon: Headphones,
+184:     badge: "Advisory",
+185:     desc: "Expert flight updates, route consultation, and traveler support.",
+186:     image:
+187:       "https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&q=80&w=600",
+188:     items: [
+189:       "Travel Consultation",
+190:       "Travel Itinerary Planning",
+191:       "Destination Information",
+192:       "Baggage Guidance",
+193:       "Airline Schedule Updates",
+194:       "Travel Advisory Information",
+195:     ],
+196:   },
+197:   {
+198:     id: "payment",
+199:     category: "air",
+200:     title: "Payment & Customer Care",
+201:     icon: CreditCard,
+202:     badge: "After-Sales",
+203:     desc: "Transparent invoicing, receipting, and 24/7 client care desk.",
+204:     image:
+205:       "https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&q=80&w=800",
+206:     items: [
+207:       "Flexible Payment Options",
+208:       "Booking Confirmation",
+209:       "Invoice & Receipt Issuance",
+210:       "After-Sales Customer Support",
+211:       "24/7 Emergency Travel Assistance",
+212:     ],
+213:   },
+214: ];
+215: 
+216: export default function ServicesPage() {
+217:   const [activeTab, setActiveTab] = useState("all");
+218: 
+219:   const filteredServices =
+220:     activeTab === "all"
+221:       ? SERVICES_DATA
+222:       : SERVICES_DATA.filter(
+223:           (s) => s.category === activeTab || (activeTab === "corp-vip" && s.isLightVip)
+224:         );
+225: 
+226:   return (
+227:     <div className="bg-slate-50 text-text-primary min-h-screen antialiased">
+228:       {/* Header Banner */}
+229:       <section className="relative bg-brand-900 text-white pt-10 pb-16 sm:pt-16 sm:pb-20 overflow-hidden flex items-center justify-center">
+230:         <div className="absolute inset-0 bg-[radial-gradient(#1D9BF0_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
+231: 
+232:         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+233:           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-white tracking-tight drop-shadow-md max-w-3xl mx-auto">
+234:             Our Full Range of <span className="text-brand-gold">Services</span>
+235:           </h1>
+236: 
+237:           <p className="mt-3 text-base sm:text-lg text-gray-200 max-w-2xl mx-auto font-medium leading-relaxed">
+238:             Everything you need for a frictionless journey, from instant tickets to VIP airport lounge clearance.
+239:           </p>
+240:         </div>
+241: 
+242:         <div
+243:           className="absolute bottom-0 left-0 right-0 z-20 h-6 sm:h-8 bg-slate-50"
+244:           style={{ clipPath: "ellipse(60% 100% at 50% 100%)" }}
+245:         />
+246:       </section>
+247: 
+248:       <section className="pt-2 pb-16 sm:pb-20 lg:pb-24">
+249:         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+250:           
+251:           <div className="relative bg-gradient-to-r from-amber-500/10 via-amber-100/40 to-amber-500/10 border-2 border-amber-300 rounded-3xl p-6 sm:p-8 shadow-sm backdrop-blur-sm overflow-hidden">
+252:             <div className="absolute top-0 right-0 -translate-y-6 translate-x-6 w-44 h-44 bg-brand-gold/20 rounded-full blur-3xl pointer-events-none" />
+253:             
+254:             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+255:               <div className="space-y-3 max-w-2xl">
+256:                 <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-amber-400 to-brand-gold text-brand-900 rounded-full font-black text-xs uppercase tracking-wider shadow-sm">
+257:                   <span>⭐️ Premium VIP Experience</span>
+258:                 </div>
+259:                 
+260:                 <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-900">
+261:                   Airport Meet & Greet, CIP/VIP & Lounge Access
+262:                 </h2>
+263:                 
+264:                 <p className="text-gray-700 text-sm sm:text-base font-medium leading-relaxed">
+265:                   Bypass the long airport lines. Enjoy dedicated baggage assistance, CIP/VIP expedited terminal clearance, Special Assistance Requests (SSR), and private lounge booking.
+266:                 </p>
+267:               </div>
+268: 
+269:               <Link
+270:                 href="/contact"
+271:                 className="inline-flex items-center gap-2 bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white px-7 py-4 rounded-2xl font-bold transition-all text-sm shrink-0 shadow-lg hover:shadow-xl"
+272:               >
+273:                 <span>Request VIP Service</span>
+274:                 <ArrowRight className="w-4 h-4" />
+275:               </Link>
+276:             </div>
+277:           </div>
+278: 
+279:           <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all">
+280:             <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 text-center lg:text-left flex flex-col justify-between space-y-6">
+281:               <div className="space-y-3">
+282:                 <span className="inline-block px-3 py-1 bg-brand-gold/15 text-brand-900 font-bold text-xs uppercase tracking-wider rounded-full">
+283:                   Core Specialty
+284:                 </span>
+285: 
+286:                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-900 tracking-tight">
+287:                   {MAIN_SERVICE.title}
+288:                 </h2>
+289: 
+290:                 <p className="text-text-secondary text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+291:                   {MAIN_SERVICE.desc}
+292:                 </p>
+293: 
+294:                 <div className="pt-2 flex flex-wrap gap-2 justify-center lg:justify-start">
+295:                   {MAIN_SERVICE.features.map((feat, idx) => (
+296:                     <div
+297:                       key={idx}
+298:                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-brand-900 font-bold"
+299:                     >
+300:                       <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0" />
+301:                       <span>{feat}</span>
+302:                     </div>
+303:                   ))}
+304:                 </div>
+305:               </div>
+306: 
+307:               <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+308:                 <Link
+309:                   href="/booking"
+310:                   className="inline-flex items-center justify-center gap-2 bg-brand-900 hover:bg-brand-gold hover:text-brand-900 text-white px-8 py-3.5 rounded-xl font-bold transition-all text-sm shadow-md text-center"
+311:                 >
+312:                   <Plane className="w-4 h-4" />
+313:                   <span>Book Flight Now</span>
+314:                 </Link>
+315:                 <Link
+316:                   href="/contact"
+317:                   className="inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-brand-900 px-6 py-3.5 rounded-xl font-bold transition-all text-sm text-center"
+318:                 >
+319:                   <span>Inquire Direct</span>
+320:                 </Link>
+321:               </div>
+322:             </div>
+323: 
+324:             <div className="lg:col-span-5 relative min-h-[220px] lg:min-h-full bg-slate-900 overflow-hidden">
+325:               <Image
+326:                 src={MAIN_SERVICE.image}
+327:                 alt="Global Flight Network"
+328:                 fill
+329:                 unoptimized
+330:                 sizes="(max-width: 1024px) 100vw, 40vw"
+331:                 className="object-cover opacity-80"
+332:               />
+333:               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+334:               
+335:               <div className="absolute bottom-4 left-4 right-4 text-white z-10">
+336:                 <p className="text-xs uppercase tracking-widest text-brand-gold font-extrabold">
+337:                   Global Flight Booking
+338:                 </p>
+339:                 <p className="text-xs text-gray-200 font-medium mt-0.5">
+340:                   Direct rates and flight reservations from Addis Ababa globally.
+341:                 </p>
+342:               </div>
+343:             </div>
+344:           </div>
+345: 
+346:           {/* Category Filter Tabs */}
+347:           <div className="flex items-center justify-center flex-wrap gap-2 pt-2">
+348:             {CATEGORIES.map((cat) => (
+349:               <button
+350:                 key={cat.id}
+351:                 onClick={() => setActiveTab(cat.id)}
+352:                 className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
+353:                   activeTab === cat.id
+354:                     ? "bg-brand-900 text-white shadow-md"
+355:                     : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-brand-900"
+356:                 }`}
+357:               >
+358:                 {cat.label}
+359:               </button>
+360:             ))}
+361:           </div>
+362: 
+363:           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+364:             {filteredServices.map((service) => {
+365:               const Icon = service.icon;
+366:               const isVip = service.isLightVip;
+367: 
+368:               return (
+369:                 <div
+370:                   key={service.id}
+371:                   className={`rounded-3xl transition-all duration-300 flex flex-col justify-between border overflow-hidden ${
+372:                     isVip
+373:                       ? "bg-gradient-to-br from-amber-50/90 via-white to-amber-50/40 border-amber-300 shadow-md ring-1 ring-amber-200"
+374:                       : "bg-white border-gray-200/80 shadow-sm hover:shadow-md"
+375:                   }`}
+376:                 >
+377:                   <div className="relative h-36 sm:h-40 w-full overflow-hidden bg-gray-100">
+378:                     <Image
+379:                       src={service.image}
+380:                       alt={service.title}
+381:                       fill
+382:                       unoptimized
+383:                       sizes="(max-width: 768px) 100vw, 50vw"
+384:                       className="object-cover"
+385:                     />
+386:                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/20 to-transparent" />
+387: 
+388:                     <div className="absolute top-3 right-3">
+389:                       <span
+390:                         className={`text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full shadow-sm ${
+391:                           isVip
+392:                             ? "bg-amber-300 text-amber-950"
+393:                             : "bg-white/90 text-brand-900 backdrop-blur-sm"
+394:                         }`}
+395:                       >
+396:                         {service.badge}
+397:                       </span>
+398:                     </div>
+399: 
+400:                     <div className="absolute bottom-3 left-4 flex items-center gap-2 text-white">
+401:                       <div
+402:                         className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+403:                           isVip
+404:                             ? "bg-amber-400 text-amber-950"
+405:                             : "bg-brand-900 text-white"
+406:                         }`}
+407:                       >
+408:                         <Icon className="w-5 h-5" />
+409:                       </div>
+410:                       <h3 className="text-lg sm:text-xl font-extrabold text-white drop-shadow-sm">
+411:                         {service.title}
+412:                       </h3>
+413:                     </div>
+414:                   </div>
+415: 
+416:                   <div className="p-6 space-y-5 flex-1 flex flex-col justify-between">
+417:                     <div>
+418:                       <p className="text-text-secondary text-xs sm:text-sm font-medium leading-relaxed mb-4">
+419:                         {service.desc}
+420:                       </p>
+421: 
+422:                       <div className="pt-2 border-t border-gray-100/80">
+423:                         <div className="grid grid-cols-1 gap-2">
+424:                           {service.items.map((item, idx) => (
+425:                             <div
+426:                               key={idx}
+427:                               className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2.5 border transition-all ${
+428:                                 isVip
+429:                                   ? "bg-white/80 border-amber-200/80 text-amber-950"
+430:                                   : "bg-slate-50/70 border-slate-100 text-gray-800"
+431:                               }`}
+432:                             >
+433:                               <span
+434:                                 className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+435:                                   isVip ? "bg-amber-500" : "bg-brand-gold"
+436:                                 }`}
+437:                               />
+438:                               <span>{item}</span>
+439:                             </div>
+440:                           ))}
+441:                         </div>
+442:                       </div>
+443:                     </div>
+444: 
+445:                     {/* Card Action Link */}
+446: 
+447:                   </div>
+448:                 </div>
+449:               );
+450:             })}
+451:           </div>
+452: 
+453: 
+454:         </div>
+455:       </section>
+456:     </div>
+457:   );
+458: }
+The above content shows the entire, complete file contents of the requested file.

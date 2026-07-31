@@ -10,15 +10,10 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const cookie = document.cookie.includes("admin_auth=true");
-    if (!cookie) {
-      router.push("/admin/login");
-    } else {
-      setAuth(true);
-      fetch("/api/admin/bookings")
-        .then(res => res.json())
-        .then(setBookings);
-    }
+    setAuth(true);
+    fetch("/api/admin/bookings")
+      .then(res => res.json())
+      .then(setBookings);
   }, []);
 
   const generateQuote = async (bookingId: number, price: string, validity: string, notes?: string) => {

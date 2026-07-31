@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/ui/Header";
-import Footer from "@/components/ui/Footer";
-import ChatbotWidget from "@/components/ui/ChatbotWidget";
+
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -24,11 +22,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={nunito.variable}>
-      <body className="flex flex-col min-h-screen font-sans">
-        <Header />
+      <body className="flex flex-col min-h-screen font-sans bg-gray-50">
         <main className="flex-grow">{children}</main>
-        <Footer />
-        <ChatbotWidget />
       </body>
     </html>
   );
