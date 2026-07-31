@@ -10,9 +10,9 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Ethiopia Air Ticketing | Flight Quotations & Booking",
+  title: "Ask Travel Trading PLC | Flight Booking Agency",
   description:
-    "Get fast flight quotes and book tickets from Addis Ababa to worldwide destinations.",
+    "Book flights from Addis Ababa to worldwide destinations with our reliable booking agency.",
 };
 
 export default function RootLayout({
