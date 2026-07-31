@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ComponentType, SVGProps } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +17,18 @@ import {
   Plane
 } from "lucide-react";
 
+type IconType = ComponentType<SVGProps<SVGSVGElement>>;
+
+type NavChild = {
+  label: string;
+  href: string;
+  icon?: IconType;
+};
+
+type NavItem = 
+  | { label: string; href: string; icon: IconType; id?: never; children?: never }
+  | { label: string; icon: IconType; id: string; children: NavChild[]; href?: never };
+
 export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
@@ -27,7 +39,7 @@ export default function AdminSidebar() {
     if (isCollapsed) setIsCollapsed(false); // Auto-expand sidebar if opening a sub-menu
   };
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Sales Register", href: "/admin/sales", icon: ReceiptText },
     { label: "Refund", href: "/admin/refunds", icon: Undo2 },
@@ -58,7 +70,7 @@ export default function AdminSidebar() {
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
-      {/* Sidebar Header */}
+
       <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
         {!isCollapsed && <span className="font-bold text-lg text-brand-gold truncate">Admin Panel</span>}
         <button
@@ -69,10 +81,9 @@ export default function AdminSidebar() {
         </button>
       </div>
 
-      {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
         {navItems.map((item) => {
-          const isActive = item.href && pathname.startsWith(item.href);
+          const isActive = "href" in item && item.href ? pathname.startsWith(item.href) : false;
           
           if (item.children) {
             const isExpanded = expandedMenus[item.id];
@@ -120,7 +131,7 @@ export default function AdminSidebar() {
             );
           }
 
-          // Normal Link
+
           return (
             <Link
               key={item.label}
