@@ -1,6 +1,7 @@
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ChatbotWidget from "@/components/ui/ChatbotWidget";
+import AnnouncementBanner from "@/components/sections/AnnouncementBanner";
 
 export default function PublicLayout({
   children,
@@ -9,6 +10,7 @@ export default function PublicLayout({
 }) {
   return (
     <>
+      <AnnouncementBanner/>
       <Header />
       {children}
       <Footer />

@@ -14,7 +14,8 @@ import {
   Settings,
   Menu,
   ChevronDown,
-  Plane
+  Plane,
+  Bell,
 } from "lucide-react";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
@@ -31,12 +32,12 @@ type NavItem =
 
 export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({ content: true });
   const pathname = usePathname();
 
   const toggleExpand = (menu: string) => {
     setExpandedMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
-    if (isCollapsed) setIsCollapsed(false); // Auto-expand sidebar if opening a sub-menu
+    if (isCollapsed) setIsCollapsed(false);
   };
 
   const navItems: NavItem[] = [
@@ -50,6 +51,7 @@ export default function AdminSidebar() {
       id: "content",
       children: [
         { label: "Manage Services", href: "/admin/services", icon: Plane },
+        { label: "Announcements", href: "/admin/announcements", icon: Bell },
       ],
     },
     { label: "Audit Log", href: "/admin/audit", icon: ShieldAlert },
@@ -70,7 +72,6 @@ export default function AdminSidebar() {
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
-
       <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
         {!isCollapsed && <span className="font-bold text-lg text-brand-gold truncate">Admin Panel</span>}
         <button
@@ -87,7 +88,6 @@ export default function AdminSidebar() {
           
           if (item.children) {
             const isExpanded = expandedMenus[item.id];
-            // Check if any child is active
             const hasActiveChild = item.children.some(c => pathname.startsWith(c.href));
             
             return (
@@ -107,7 +107,6 @@ export default function AdminSidebar() {
                   )}
                 </button>
                 
-                {/* Submenu */}
                 {!isCollapsed && isExpanded && (
                   <div className="bg-black/20 py-1">
                     {item.children.map((child) => {
@@ -130,7 +129,6 @@ export default function AdminSidebar() {
               </div>
             );
           }
-
 
           return (
             <Link
