@@ -88,7 +88,7 @@ export default function ServicesList({ services }: { services: ServiceData[] }) 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {filteredServices.map((service) => {
           // Dynamically grab the icon from lucide-react based on the string name
-          const Icon = (LucideIcons as any)[service.iconName] || LucideIcons.Globe2;
+          const Icon = (LucideIcons as unknown as Record<string, React.ElementType>)[service.iconName] || LucideIcons.Globe2;
           const isVip = service.isLightVip;
 
           return (

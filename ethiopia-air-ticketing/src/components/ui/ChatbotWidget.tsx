@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -36,6 +37,8 @@ const sanitizeText = (text: string): string => {
   }
   return clean;
 };
+
+const generateId = () => "msg-" + Math.random().toString(36).substr(2, 9);
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -161,7 +164,7 @@ export default function ChatbotWidget() {
     }
 
     const cleanInput = userText.trim();
-    const userMessageId = Date.now().toString();
+    const userMessageId = generateId();
 
     const updatedMessages: Message[] = [
       ...messages,
@@ -187,7 +190,7 @@ export default function ChatbotWidget() {
         setMessages([
           ...updatedMessages,
           {
-            id: (Date.now() + 1).toString(),
+            id: generateId(),
             sender: "bot",
             text: sanitizeText(`Great! Let's find your ticket options. ✈️\n\n${nextQ.text}`),
             options: nextQ.options,
@@ -223,7 +226,7 @@ export default function ChatbotWidget() {
         setMessages([
           ...updatedMessages,
           {
-            id: (Date.now() + 1).toString(),
+            id: generateId(),
             sender: "bot",
             text: sanitizeText(nextQ.text),
             options: nextQ.options,
@@ -233,7 +236,7 @@ export default function ChatbotWidget() {
         setMessages([
           ...updatedMessages,
           {
-            id: (Date.now() + 1).toString(),
+            id: generateId(),
             sender: "bot",
             text: sanitizeText(
               `All set! Click the button below to send your flight inquiry to our travel team on ${updatedData.contactMethod}. We will send you the best IATA fares right away!`
@@ -251,7 +254,7 @@ export default function ChatbotWidget() {
     setMessages([
       ...updatedMessages,
       {
-        id: (Date.now() + 1).toString(),
+        id: generateId(),
         sender: "bot",
         text: aiReply,
         options: ["✈️ Find a Cheap Ticket", "📞 Talk to an Agent"],
@@ -265,7 +268,7 @@ export default function ChatbotWidget() {
     setIsLoading(false);
     setMessages([
       {
-        id: Date.now().toString(),
+        id: generateId(),
         sender: "bot",
         text: sanitizeText(`Selam! 🌼 Welcome to ${COMPANY_NAME}.\n"${SLOGAN}"\n\nHow can our team help you travel today?`),
         options: ["✈️ Find a Cheap Ticket", "💳 Payment & Visa Guidance", "📞 Talk to an Agent"],

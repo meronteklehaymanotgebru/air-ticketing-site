@@ -95,6 +95,7 @@ function AirportAutocomplete({
   useEffect(() => {
     const query = safeValue.toLowerCase().split("(")[0].trim();
     if (query.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFiltered([]);
       return;
     }
@@ -474,6 +475,7 @@ ${data.specialRequests ? `📝 Notes: ${data.specialRequests}\n` : ""}
             </label>
             <PassengerSelector
               adults={adults}
+              // eslint-disable-next-line react/no-children-prop
               children={children}
               infants={infants}
               onChange={({ adults, children, infants }) => {

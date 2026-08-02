@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Plane,
   Bell,
+  Inbox,
 } from "lucide-react";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
@@ -30,7 +31,15 @@ type NavItem =
   | { label: string; href: string; icon: IconType; id?: never; children?: never }
   | { label: string; icon: IconType; id: string; children: NavChild[]; href?: never };
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ 
+  role,
+  isMobileOpen,
+  setIsMobileOpen
+}: { 
+  role: string;
+  isMobileOpen?: boolean;
+  setIsMobileOpen?: (open: boolean) => void;
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({ content: true });
   const pathname = usePathname();
@@ -61,17 +70,51 @@ export default function AdminSidebar() {
       icon: Settings,
       id: "settings",
       children: [
-        { label: "Branch", href: "/admin/settings/branch" },
+        { label: "Branch Offices", href: "/admin/settings/branch-offices" },
+        { label: "Payment Modes", href: "/admin/settings/payment-modes" },
+        { label: "NON IATA", href: "/admin/settings/non-iata" },
+        { label: "Agent Codes", href: "/admin/settings/agent-codes" },
       ],
     },
   ];
 
+  // RBAC Navigation Filtering
+  const filteredNavItems = navItems.filter((item) => {
+    if (role === "ADMIN") return true; // Admin sees everything
+    
+    // Branch Manager sees Sales, Refunds, Cashout
+    if (role === "MANAGER") {
+      return ["Sales Register", "Refund", "Cash Out"].includes(item.label);
+    }
+    
+    // Ticket Agent sees Sales, Refunds
+    if (role === "AGENT") {
+      return ["Sales Register", "Refund"].includes(item.label);
+    }
+    
+    // Finance sees Cashout
+    if (role === "FINANCE") {
+      return ["Cash Out"].includes(item.label);
+    }
+
+    return false;
+  });
+
   return (
-    <div
-      className={`bg-brand-900 text-white transition-all duration-300 flex flex-col h-screen ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
-    >
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileOpen?.(false)}
+        />
+      )}
+      
+      <div
+        className={`bg-brand-900 text-white transition-all duration-300 flex flex-col h-screen fixed md:relative z-50 ${
+          isCollapsed ? "w-20" : "w-64"
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
       <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
         {!isCollapsed && <span className="font-bold text-lg text-brand-gold truncate">Admin Panel</span>}
         <button
@@ -83,7 +126,7 @@ export default function AdminSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive = "href" in item && item.href ? pathname.startsWith(item.href) : false;
           
           if (item.children) {
@@ -146,5 +189,6 @@ export default function AdminSidebar() {
         })}
       </div>
     </div>
+    </>
   );
 }

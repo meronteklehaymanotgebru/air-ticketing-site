@@ -1,7 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import AdminSidebar from "@/components/admin/AdminSidebar";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminLayoutWrapper from "@/components/admin/AdminLayoutWrapper";
 import { Toaster } from "react-hot-toast";
 
 export default async function AdminAuthenticatedLayout({
@@ -16,15 +15,47 @@ export default async function AdminAuthenticatedLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <AdminHeader user={session} />
-        <main className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          {children}
-        </main>
-      </div>
-      <Toaster position="top-right" />
-    </div>
+    <>
+      <AdminLayoutWrapper user={session as any}>
+        {children}
+      </AdminLayoutWrapper>
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          className: '',
+          style: {
+            border: '1px solid #f1f5f9',
+            padding: '16px',
+            color: '#1e293b',
+            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+            borderRadius: '1rem',
+            fontWeight: '600',
+            fontSize: '14px',
+          },
+          success: {
+            style: {
+              background: '#f0fdf4',
+              borderColor: '#bbf7d0',
+              color: '#166534',
+            },
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#f0fdf4',
+            },
+          },
+          error: {
+            style: {
+              background: '#fef2f2',
+              borderColor: '#fecaca',
+              color: '#991b1b',
+            },
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fef2f2',
+            },
+          },
+        }}
+      />
+    </>
   );
 }

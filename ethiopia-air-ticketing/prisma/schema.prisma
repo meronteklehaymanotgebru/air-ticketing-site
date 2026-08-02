@@ -28,8 +28,13 @@ model User {
   name      String
   role      String   @default("AGENT")
   branch    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  ticketSales     TicketSale[]
+  refundRegisters RefundRegister[]
+  expenseRegisters ExpenseRegister[]
+  auditLogs        AuditLog[]
 }
 model Announcement {
   id        String   @id @default(cuid())
@@ -38,4 +43,133 @@ model Announcement {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // CREATE, UPDATE, DELETE
+  entity    String   // TicketSale, RefundRegister, ExpenseRegister, etc.
+  entityId  String
+  details   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// --- Sales Register Models ---
+
+model PaymentMode {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  status      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  ticketSales TicketSale[]
+}
+
+model BranchOffice {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  status      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  ticketSales TicketSale[]
+}
+
+model NonIata {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  status          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  ticketSales     TicketSale[]
+  refundRegisters RefundRegister[]
+}
+
+model AgentCode {
+  id              String           @id @default(cuid())
+  code            String           @unique
+  name            String?
+  status          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  ticketSales     TicketSale[]
+  refundRegisters RefundRegister[]
+  expenseRegisters ExpenseRegister[]
+}
+
+model TicketSale {
+  id                 String   @id @default(cuid())
+  date               DateTime @default(now())
+  sector             String
+  pnr                String
+  ticketNumber       String
+  ticketType         String
+  grossPayment       Float
+  systemFare         Float
+  commission         Float
+  phoneNumber        String?
+  receiptIssued      Boolean  @default(false)
+  ticketStatus       String
+  airlineCode        String
+  passengerDocument  String?
+  tripType           String
+  remark             String?
+  
+  // Relations
+  paymentModeId      String
+  paymentMode        PaymentMode  @relation(fields: [paymentModeId], references: [id])
+  
+  branchOfficeId     String
+  branchOffice       BranchOffice @relation(fields: [branchOfficeId], references: [id])
+  
+  agentCodeId        String
+  agentCode          AgentCode    @relation(fields: [agentCodeId], references: [id])
+  
+  nonIataId          String?
+  nonIata            NonIata?     @relation(fields: [nonIataId], references: [id])
+  
+  createdById        String?
+  createdBy          User?        @relation(fields: [createdById], references: [id])
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model RefundRegister {
+  id                 String   @id @default(cuid())
+  date               DateTime @default(now())
+  refundAmount       Float
+  phoneNumber        String
+  pnr                String
+  ticketNumber       String
+  passengerName      String
+  sector             String
+  airlineCode        String
+  
+  // Relations
+  agentCodeId        String
+  agentCode          AgentCode @relation(fields: [agentCodeId], references: [id])
+  
+  nonIataId          String
+  nonIata            NonIata   @relation(fields: [nonIataId], references: [id])
+  
+  createdById        String?
+  createdBy          User?     @relation(fields: [createdById], references: [id])
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ExpenseRegister {
+  id                 String   @id @default(cuid())
+  date               DateTime @default(now())
+  amount             Float
+  reason             String
+  
+  // Relations
+  agentCodeId        String
+  agentCode          AgentCode @relation(fields: [agentCodeId], references: [id])
+  
+  createdById        String?
+  createdBy          User?     @relation(fields: [createdById], references: [id])
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }

@@ -8,6 +8,19 @@ A modern, full-stack Next.js 16 application for managing flight bookings, travel
 - **Styling:** Tailwind CSS + custom Glassmorphism UI
 - **Authentication:** Custom JWT (jose) + bcryptjs
 - **State/Notifications:** Zustand, React-Hot-Toast
+- **Icons & Charts:** Lucide-React, Recharts
+- **Data Export:** jsPDF, xlsx
+
+## 📦 Key Admin Dependencies Installed
+The following crucial packages were added during the admin dashboard build. Running `npm install` will fetch them automatically, but they are listed here for your reference:
+- `bcryptjs` (Password hashing)
+- `jose` (Edge-compatible JWT authentication)
+- `lucide-react` (Modern SVG icons used throughout the admin panel)
+- `react-hot-toast` (Beautiful popup notifications)
+- `recharts` (Used for dashboard statistics graphs)
+- `jspdf` & `jspdf-autotable` (PDF exporting functionality)
+- `xlsx` (Excel exporting functionality)
+- `@prisma/client` & `prisma` (Database ORM)
 
 ---
 
@@ -26,13 +39,14 @@ cp .env.example .env
 ```
 *Make sure your local Postgres server is running and the database specified in `.env` exists.*
 
-### 3. Database Setup & Seeding
-Push the database schema to your local Postgres and generate the Prisma client:
+### 3. Database Setup & Syncing
+If you are pulling the latest updates (which include new schemas like Announcements), you must sync your local database and regenerate the Prisma client:
 ```bash
 npx prisma db push
+npx prisma generate
 ```
 
-Next, seed the database with the default Admin user and the core Travel Services:
+If this is your first time setting up the project, seed the database with the default Admin user and the core Travel Services:
 ```bash
 npm run seed
 ```

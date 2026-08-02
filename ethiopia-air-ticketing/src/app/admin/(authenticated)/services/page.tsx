@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
-import toast from "react-hot-toast";
+import { useEffect, useState } from"react";
+import { useRouter } from"next/navigation";
+import { Pencil, Trash2, Plus, X } from"lucide-react";
+import toast from"react-hot-toast";
 
 type Service = {
   id: string;
@@ -20,29 +20,36 @@ export default function AdminServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  const totalPages = Math.ceil(services.length / ITEMS_PER_PAGE);
+  const paginatedServices = services.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   
   // Form State
   const [formData, setFormData] = useState({
-    category: "air",
-    title: "",
-    iconName: "Plane",
-    badge: "",
-    desc: "",
-    image: "",
+    category:"air",
+    title:"",
+    iconName:"Plane",
+    badge:"",
+    desc:"",
+    image:"",
     isLightVip: false,
-    items: "", // We will split by comma for array
+    items:"", // We will split by comma for array
   });
 
   const router = useRouter();
-
-  useEffect(() => {
-    fetchServices();
-  }, [router]);
 
   const fetchServices = async () => {
     const res = await fetch("/api/services");
     if (res.ok) setServices(await res.json());
   };
+
+  useEffect(() => {
+    fetchServices();
+  }, [router]);
 
   const handleOpenModal = (service?: Service) => {
     if (service) {
@@ -60,7 +67,7 @@ export default function AdminServices() {
     } else {
       setEditingId(null);
       setFormData({
-        category: "air", title: "", iconName: "Plane", badge: "", desc: "", image: "", isLightVip: false, items: ""
+        category:"air", title:"", iconName:"Plane", badge:"", desc:"", image:"", isLightVip: false, items:""
       });
     }
     setIsModalOpen(true);
@@ -81,7 +88,7 @@ export default function AdminServices() {
             className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600" 
             onClick={async () => {
               toast.dismiss(t.id);
-              const res = await fetch(`/api/services/${id}`, { method: "DELETE" });
+              const res = await fetch(`/api/services/${id}`, { method:"DELETE" });
               if (res.ok) {
                 toast.success("Service deleted successfully!");
                 fetchServices();
@@ -101,20 +108,20 @@ export default function AdminServices() {
     e.preventDefault();
     const payload = {
       ...formData,
-      items: formData.items.split("\n").map(i => i.trim()).filter(i => i !== ""),
+      items: formData.items.split("\n").map(i => i.trim()).filter(i => i !==""),
     };
 
-    const url = editingId ? `/api/services/${editingId}` : "/api/services";
-    const method = editingId ? "PUT" : "POST";
+    const url = editingId ? `/api/services/${editingId}` :"/api/services";
+    const method = editingId ?"PUT" :"POST";
 
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type":"application/json" },
       body: JSON.stringify(payload),
     });
 
     if (res.ok) {
-      toast.success(editingId ? "Service updated successfully!" : "Service created successfully!");
+      toast.success(editingId ?"Service updated successfully!" :"Service created successfully!");
       setIsModalOpen(false);
       fetchServices();
     } else {
@@ -134,23 +141,23 @@ export default function AdminServices() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow border overflow-hidden">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-brand-900 text-white font-semibold uppercase text-xs">
             <tr>
-              <th className="px-6 py-4 font-semibold text-gray-700">Service Title</th>
-              <th className="px-6 py-4 font-semibold text-gray-700">Category</th>
-              <th className="px-6 py-4 font-semibold text-gray-700">Badge</th>
-              <th className="px-6 py-4 font-semibold text-gray-700">Actions</th>
+              <th className="px-6 py-4 font-semibold">Service Title</th>
+              <th className="px-6 py-4 font-semibold">Category</th>
+              <th className="px-6 py-4 font-semibold">Badge</th>
+              <th className="px-6 py-4 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {services.map((service) => (
-              <tr key={service.id} className="border-b hover:bg-gray-50">
+            {paginatedServices.map((service) => (
+              <tr key={service.id} className="even:bg-gray-50 hover:bg-gray-100">
                 <td className="px-6 py-4 font-medium text-brand-900">{service.title}</td>
                 <td className="px-6 py-4"><span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{service.category}</span></td>
                 <td className="px-6 py-4">{service.badge}</td>
-                <td className="px-6 py-4 flex gap-3">
+                <td className="px-6 py-4 flex gap-6">
                   <button onClick={() => handleOpenModal(service)} className="text-gray-500 hover:text-brand-900">
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -167,17 +174,41 @@ export default function AdminServices() {
             )}
           </tbody>
         </table>
+
+        {services.length > 0 && (
+          <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between bg-gray-50/50 gap-4">
+            <span className="text-sm text-gray-500 font-medium">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, services.length)} of {services.length} entries
+            </span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-200 text-sm font-bold transition-colors text-gray-700 bg-white shadow-sm"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-200 text-sm font-bold transition-colors text-gray-700 bg-white shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold">{editingId ? "Edit Service" : "Add New Service"}</h2>
+              <h2 className="text-xl font-bold">{editingId ?"Edit Service" :"Add New Service"}</h2>
               <button onClick={() => setIsModalOpen(false)}><X className="w-6 h-6 text-gray-400" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-1">Title</label>
                   <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border rounded-lg p-2" />
@@ -193,7 +224,7 @@ export default function AdminServices() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-1">Icon Name (lucide-react)</label>
                   <input required type="text" value={formData.iconName} onChange={e => setFormData({...formData, iconName: e.target.value})} placeholder="e.g. Plane, Crown, Hotel" className="w-full border rounded-lg p-2" />
